@@ -1,0 +1,329 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>Example Presentation</title>
+
+		<link rel="stylesheet" href="css/reset.css">
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/hicks.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/monokai.css">
+		<!-- <link href="https://fonts.googleapis.com/css?family=Space+Mono" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css?family=Playfair+Display" rel="stylesheet"> -->
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+
+				<section class="center">
+					<!-- <div class="o-title-c">Segregation from background noise as outlier detection</div> -->
+					<div class="o-title-c">EXAMPLE PRESENTAION</div>
+					<div class="o-stitle-c">JARROD M<span style="color:#5C6CFA">.</span> HICKS</div>
+					<div class="o-stitle-c">
+						07<span style="color:#5C6CFA">/</span>01<span style="color:#5C6CFA">/</span>2019
+					</div>
+				</section>
+
+				<section class="center">
+					<p style="color:#5C6CFA; font-size:5em;">X + Y = 7</p>
+				</section>
+
+				<section class="center">
+					<img class="plain" data-src="imgs/spectrogram_ex.png" style="max-width:75%; max-height:75%"></img>
+				</section>
+
+				<section>
+					<div class="s-title-l">MY SLIDE TITLE</div>
+					<div class="l-double">
+							<div style="background-color:#aaa;">
+								<p>Column 1</p>
+    						<p>Some text..</p>
+							</div>
+							<div style="background-color:#bbb;">
+								<h4>Column 2</h4>
+	    					<p>Some audio below</p>
+								<audio controls src="audio/test.mp3" type="audio/mpeg"></audio>
+								<!-- <button onclick="document.getElementById('TESTAUDIO').play()">Play!</button> -->
+							</div>
+					</div>
+				</section>
+				<section>
+					<p>
+					  When \(a \ne 0\), there are two solutions to \(ax^2 + bx + c = 0\) and they are
+					  $$x = {-b \pm \sqrt{b^2-4ac} \over 2a}.$$
+					</p>
+				</section>
+				<section>
+					<section>Vertical Slide 1</section>
+					<section>Vertical Slide 2</section>
+					<section>Vertical Slide 3</section>
+					<section>Vertical Slide 4</section>
+				</section>
+				<section>
+					<video data-autoplay src="http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4"></video>
+				</section>
+				<section>
+					<p class="fragment grow">grow</p>
+					<p class="fragment shrink">shrink</p>
+					<p class="fragment fade-out">fade-out</p>
+					<p class="fragment fade-up">fade-up (also down, left and right!)</p>
+					<p class="fragment fade-in-then-out">fades in, then out when we move to the next step</p>
+					<p class="fragment fade-in-then-semi-out">fades in, then obfuscate when move to the next</p>
+					<p class="fragment highlight-current-blue">blue only once</p>
+					<p class="fragment highlight-red">highlight-red</p>
+					<p class="fragment highlight-blue">highlight-blue</p>
+				</section>
+				<section>
+					<p class="fragment" data-fragment-index="3">Appears last</p>
+					<p class="fragment" data-fragment-index="1">Appears first</p>
+					<p class="fragment" data-fragment-index="2">Appears second</p>
+				</section>
+				<section>
+					<span class="fragment fade-in">
+						<span class="fragment fade-out">I'll fade in, then out</span>
+					</span>
+				</section>
+				<section>
+					<pre><code data-trim data-line-numbers="4,8-11">
+						import React, { useState } from 'react';
+
+						function Example() {
+						  const [count, setCount] = useState(0);
+
+						  return (
+						    <div>
+						      <p>You clicked {count} times</p>
+						      <button onClick={() => setCount(count + 1)}>
+						        Click me
+						      </button>
+						    </div>
+						  );
+						}
+						</code></pre>
+				</section>
+				<section>
+				  <!-- <img data-src="https://www.healthline.com/hlcmsresource/images/bm_images/nervous2.jpg"> -->
+				  <iframe width="1600" height="800" data-src="http://www.mit.edu/~jmhicks/"></iframe>
+				  <!-- <video>
+				    <source data-src="https://pmdvod.nationalgeographic.com/NG_Video/486/367/1004457539934_1500569536963_1004466243718_mp4_video_1024x576_1632000_primary_audio_eng_3.mp4" type="video/mp4" />
+				  </video> -->
+				</section>
+				<section data-background-image="https://cdn1.iconfinder.com/data/icons/smashicons-medical-yellow-vol-3/60/125_-Brain-_medical_health_healthcare-512.png" data-background-size="500px" data-background-repeat="repeat">
+					<h2>This background image will be sized to 100px and repeated</h2>
+				</section>
+				<section data-background-color="rgba(93, 113, 241)">
+					<h2>Color</h2>
+				</section>
+				<section data-markdown>
+						<textarea data-template>
+							## Page title
+
+							A paragraph with some text and a [link](http://hakim.se).
+						</textarea>
+				</section>
+				<section data-markdown>
+					<script type="text/template">
+						- Item 1 <!-- .element: class="fragment" data-fragment-index="1" -->
+						- Item 2 <!-- .element: class="fragment" data-fragment-index="2" -->
+					</script>
+				</section>
+				<section>
+						<p>After 2 seconds the first fragment will be shown.</p>
+						<p class="fragment">After 10 seconds the next fragment will be shown.</p>
+						<p class="fragment">Now, the fragment is displayed for 2 seconds before the next slide is shown.</p>
+				</section>
+				<section data-markdown>
+					<script type="text/template">
+					<!-- .slide: data-background="#ff0000" -->
+						Markdown content is here
+					</script>
+				</section>
+			</div>
+		</div>
+
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true },
+					{ src: 'plugin/math/math.js', async: true }
+				],
+
+				// Display presentation control arrows
+				controls: true,
+
+				// Help the user learn the controls by providing hints, for example by
+				// bouncing the down arrow when they first encounter a vertical slide
+				controlsTutorial: false,
+
+				// Determines where controls appear, "edges" or "bottom-right"
+				controlsLayout: 'bottom-right',
+
+				// Visibility rule for backwards navigation arrows; "faded", "hidden"
+				// or "visible"
+				controlsBackArrows: 'faded',
+
+				// Display a presentation progress bar
+				progress: true,
+
+				// Display the page number of the current slide
+				slideNumber: 'c/t',
+
+				// Add the current slide number to the URL hash so that reloading the
+				// page/copying the URL will return you to the same slide
+				hash: true,
+
+				// Push each slide change to the browser history. Implies `hash: true`
+				history: false,
+
+				// Enable keyboard shortcuts for navigation
+				keyboard: true,
+
+				// Enable the slide overview mode
+				overview: true,
+
+				// Vertical centering of slides
+				center: false,
+
+				// Enables touch navigation on devices with touch input
+				touch: true,
+
+				// Loop the presentation
+				loop: false,
+
+				// Change the presentation direction to be RTL
+				rtl: false,
+
+				// See https://github.com/hakimel/reveal.js/#navigation-mode
+				navigationMode: 'default',
+
+				// Randomizes the order of slides each time the presentation loads
+				shuffle: false,
+
+				// Turns fragments on and off globally
+				fragments: true,
+
+				// Flags whether to include the current fragment in the URL,
+				// so that reloading brings you to the same fragment position
+				fragmentInURL: false,
+
+				// Flags if the presentation is running in an embedded mode,
+				// i.e. contained within a limited portion of the screen
+				embedded: false,
+
+				// Flags if we should show a help overlay when the questionmark
+				// key is pressed
+				help: true,
+
+				// Flags if speaker notes should be visible to all viewers
+				showNotes: false,
+
+				// Global override for autoplaying embedded media (video/audio/iframe)
+				// - null: Media will only autoplay if data-autoplay is present
+				// - true: All media will autoplay, regardless of individual setting
+				// - false: No media will autoplay, regardless of individual setting
+				autoPlayMedia: null,
+
+				// Global override for preloading lazy-loaded iframes
+				// - null: Iframes with data-src AND data-preload will be loaded when within
+				//   the viewDistance, iframes with only data-src will be loaded when visible
+				// - true: All iframes with data-src will be loaded when within the viewDistance
+				// - false: All iframes with data-src will be loaded only when visible
+				preloadIframes: null,
+
+				// Number of milliseconds between automatically proceeding to the
+				// next slide, disabled when set to 0, this value can be overwritten
+				// by using a data-autoslide attribute on your slides
+				autoSlide: 0,
+
+				// Stop auto-sliding after user input
+				autoSlideStoppable: true,
+
+				// Use this method for navigation when auto-sliding
+				autoSlideMethod: Reveal.navigateNext,
+
+				// Specify the average time in seconds that you think you will spend
+				// presenting each slide. This is used to show a pacing timer in the
+				// speaker view
+				defaultTiming: 120,
+
+				// Enable slide navigation via mouse wheel
+				mouseWheel: false,
+
+				// Hide cursor if inactive
+				hideInactiveCursor: true,
+
+				// Time before the cursor is hidden (in ms)
+				hideCursorTime: 5000,
+
+				// Hides the address bar on mobile devices
+				hideAddressBar: true,
+
+				// Opens links in an iframe preview overlay
+				// Add `data-preview-link` and `data-preview-link="false"` to customise each link
+				// individually
+				previewLinks: false,
+
+				// Transition style
+				transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+				// Transition speed
+				transitionSpeed: 'default', // default/fast/slow
+
+				// Transition style for full page slide backgrounds
+				backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+				// Number of slides away from the current that are visible
+				viewDistance: 3,
+
+				// Parallax background image
+				parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'"
+
+				// Parallax background size
+				parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+				// Number of pixels to move the parallax background per slide
+				// - Calculated automatically unless specified
+				// - Set to 0 to disable movement along an axis
+				parallaxBackgroundHorizontal: null,
+				parallaxBackgroundVertical: null,
+
+				// The display mode that will be used to show slides
+				display: 'block',
+
+				// The "normal" size of the presentation, aspect ratio will be preserved
+				// when the presentation is scaled to fit different resolutions. Can be
+				// specified using percentage units.
+				width: 1600, /* 960 */
+				height: 900, /* 700 */
+
+				// Factor of the display size that should remain empty around the content
+				margin: 0.05,
+
+				// Bounds for smallest/largest possible scale to apply to content
+				minScale: 0.2,
+				maxScale: 1.5
+			});
+		</script>
+	</body>
+</html>
