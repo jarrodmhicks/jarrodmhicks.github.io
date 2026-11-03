@@ -1,0 +1,28 @@
+{
+  "title": "Invariant correlation: a general and straightforward method to quantify invariance in time-varying neural signals",
+  "authors": [
+    "J. M. Hicks",
+    "D. Boebinger",
+    "K. V. Nourski",
+    "M. A. Howard",
+    "C. M. Garcia",
+    "T. Wychowski",
+    "W. Pilcher",
+    "S. V. Norman-Haignere"
+  ],
+  "venue": "9th Annual Conference on Cognitive Computational Neuroscience (CCN)",
+  "year": 2026,
+  "status": "conference",
+  "topics": [
+    "neural methods"
+  ],
+  "details": {},
+  "links": {
+    "doi": "",
+    "pdf": "",
+    "code": "",
+    "data": ""
+  },
+  "featured": false,
+  "placeholder": false
+}

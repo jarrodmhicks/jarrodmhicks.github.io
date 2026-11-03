@@ -1,0 +1,22 @@
+[
+  {
+    "name": "YouTube",
+    "icon": "youtube",
+    "url": ""
+  },
+  {
+    "name": "Instagram",
+    "icon": "instagram",
+    "url": ""
+  },
+  {
+    "name": "GitHub",
+    "icon": "github",
+    "url": "https://github.com/jarrodmhicks"
+  },
+  {
+    "name": "Google Scholar",
+    "icon": "scholar",
+    "url": "https://scholar.google.com/citations?user=g7hgXiAAAAAJ&hl=en"
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "title": "Separating concurrent sound textures",
+  "type": "poster",
+  "venue": "CCN",
+  "city": "New York",
+  "date": "2026-07",
+  "conference": true,
+  "links": {
+    "poster": "https://example.com/poster",
+    "code": "https://example.com/code"
+  },
+  "placeholder": true
+}

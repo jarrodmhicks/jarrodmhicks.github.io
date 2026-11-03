@@ -1,0 +1,26 @@
+{
+  "name": "Jarrod M. Hicks",
+  "eyebrow": "Perception Science",
+  "url": "https://jarrodmhicks.com",
+  "email": "jarrod_hicks@urmc.rochester.edu",
+  "me": "J. M. Hicks",
+  "tagline": [
+    "making senses",
+    "make sense"
+  ],
+  "intro": "I study how our brains turn sounds into meaning and make fun perception content.",
+  "description": "Jarrod M. Hicks studies how the brain turns sound into meaning. Postdoctoral fellow at the University of Rochester.",
+  "about": [
+    "I'm a postdoctoral fellow at the University of Rochester, supported by an [NIH F32 fellowship](https://grants.nih.gov/funding/activity-codes/F32). I record from the human brain to understand how we recognize speech across different voices and accents.",
+    "Before that I did my PhD at MIT with Josh McDermott, studying how we hear sound textures like rain, fire and crowds, and how we use them to pick out other sounds in noise. I like measuring what people actually do on interesting tasks, recording neural responses, and building models that explain both.",
+    "Outside the lab I make short videos about perception under the name psychophyshicks."
+  ],
+  "ledes": {
+    "about": "Who I am and where I trained.",
+    "papers": "Search, or filter by topic and year.",
+    "presentations": "Talks and posters, with slides and video where I have them.",
+    "consulting": "If you are making something about how we see, hear or sense, I am happy to help with the perception side.",
+    "contact": "The best way to reach me is email.",
+    "lately": "Things I've been up to lately. Use the arrows to go back."
+  }
+}

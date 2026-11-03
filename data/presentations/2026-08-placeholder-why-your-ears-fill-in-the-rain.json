@@ -1,0 +1,13 @@
+{
+  "title": "Why your ears fill in the rain",
+  "type": "talk",
+  "venue": "SciCom Summit",
+  "city": "Boston",
+  "date": "2026-08",
+  "conference": true,
+  "links": {
+    "slides": "https://example.com/slides",
+    "video": "https://example.com/video"
+  },
+  "placeholder": true
+}
