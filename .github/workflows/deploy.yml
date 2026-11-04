@@ -4,6 +4,8 @@ on:
   push:
     branches: [main, master]
   workflow_dispatch:
+  schedule:
+    - cron: '15 9 * * *' # rebuilds daily so "upcoming" tags and stats update on their own
 
 permissions:
   contents: read
@@ -24,6 +26,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Fetch citation counts
+        run: node tools/fetch-citations.js
+        continue-on-error: true # if OpenAlex is down, the site still deploys, just without counts
+        env:
+          OPENALEX_API_KEY: ${{ secrets.OPENALEX_API_KEY }}
       - name: Build the site
         run: node build.js
       - uses: actions/configure-pages@v5

@@ -39,7 +39,7 @@ function readJSON(rel) {
 }
 function readFolder(rel) {
   const dir = path.join(ROOT, rel);
-  if (!fs.existsSync(dir)) { errors.push(`${rel}: folder is missing`); return []; }
+  if (!fs.existsSync(dir)) return []; /* an empty folder is not saved by git, so a missing one just means no entries */
   return fs.readdirSync(dir).filter(f => f.endsWith('.json')).sort()
     .map(f => ({ file: `${rel}/${f}`, data: readJSON(`${rel}/${f}`) })).filter(x => x.data);
 }
@@ -61,6 +61,10 @@ const topicIds = topics.map(t => t.id);
 const PRES_TYPES = ['talk', 'poster'];
 const PRES_COLOR = { talk: '#4D9BFF', poster: '#FF9F1C' };
 const LINK_KEYS = ['slides', 'poster', 'video', 'code', 'data', 'demo'];
+const LINK_LABEL = { poster: 'pdf' };
+const TODAY = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' }); /* YYYY-MM-DD */
+/* a talk is "upcoming" until its month (or its exact day, if you gave one) has passed; the site rebuilds daily so this stays current */
+const isUpcoming = t => String(t.date).length > 7 ? String(t.date) >= TODAY : String(t.date) >= TODAY.slice(0, 7);
 
 const papers = readFolder('data/papers').map(({ file, data }) => {
   need(file, data, 'title', v => typeof v === 'string');
@@ -70,9 +74,98 @@ const papers = readFolder('data/papers').map(({ file, data }) => {
   need(file, data, 'topics', v => Array.isArray(v) && v.length > 0 && v.every(t => topicIds.includes(t)), 'topics must be from data/topics.json: ' + topicIds.join(', '));
   if (data.placeholder) placeholders.push(file);
   return data;
-}).sort((a, b) => b.year - a.year || a.title.localeCompare(b.title));
+});
 
-const talks = readFolder('data/presentations').map(({ file, data }) => {
+
+/* ---------- papers from .bib files: paste what Google Scholar gives you ---------- */
+const BIB_EXTRA = ['topics', 'pdf', 'code', 'data', 'status', 'citations'];
+const ACC = { "'": '́', '`': '̀', '"': '̈', '^': '̂', '~': '̃' };
+const tex = s => s.replace(/\\(['`"^~])\s*\{?\\?([a-zA-Z])\}?/g, (m, a, c) => (c + ACC[a]).normalize('NFC'))
+  .replace(/\\([&%$#_])/g, '$1').replace(/[{}]/g, '').replace(/\s+/g, ' ').trim();
+function parseBib(text, file) {
+  const out = [], head = /@(\w+)\s*\{\s*([^,\s]+)\s*,/g;
+  let m;
+  while ((m = head.exec(text))) {
+    let i = m.index + m[0].length, depth = 1, start = i;
+    for (; i < text.length && depth; i++) { if (text[i] === '{') depth++; else if (text[i] === '}') depth--; }
+    const body = text.slice(start, i - 1), fields = {}, order = [];
+    head.lastIndex = i;
+    let p = 0;
+    while (p < body.length) {
+      const nm = /^[\s,]*([A-Za-z][\w-]*)\s*=\s*/.exec(body.slice(p));
+      if (!nm) break;
+      p += nm[0].length;
+      let val;
+      if (body[p] === '{') { let d = 1, q = p + 1; for (; q < body.length && d; q++) { if (body[q] === '{') d++; else if (body[q] === '}') d--; } val = body.slice(p + 1, q - 1); p = q; }
+      else if (body[p] === '"') { let q = p + 1, d = 0; for (; q < body.length; q++) { if (body[q] === '{') d++; else if (body[q] === '}') d--; else if (body[q] === '"' && !d && body[q - 1] !== '\\') break; } val = body.slice(p + 1, q); p = q + 1; }
+      else { const q = body.slice(p).search(/[,\n}]/); const e = q < 0 ? body.length : p + q; val = body.slice(p, e).trim(); p = e; }
+      const key = nm[1].toLowerCase();
+      fields[key] = val; order.push(key);
+    }
+    out.push({ type: m[1].toLowerCase(), key: m[2], fields, order, file });
+  }
+  return out;
+}
+function initials(first) {
+  return first.split(/\s+/).filter(Boolean).map(tok => tok.split('-').map(x => {
+    const c = x.replace(/\./g, '');
+    return /^[A-Z]{2,3}$/.test(c) ? c.split('').map(l => l + '.').join(' ') : c.charAt(0).toUpperCase() + '.';
+  }).join('-')).join(' ');
+}
+/* keeps full first names as written; a bare initial like "M" becomes "M." and run-together initials like "JM" become "J. M." */
+const fullName = (first, last) => (first ? first.split(/\s+/).map(t => /^[A-Z]{2,3}$/.test(t) ? t.split('').map(l => l + '.').join(' ') : /^[A-Za-z]$/.test(t) ? t + '.' : t).join(' ') + ' ' : '') + last;
+function bibAuthors(s) {
+  return tex(s).split(/\s+and\s+/i).map(a => a.trim()).filter(a => a && !/^others$/i.test(a)).map(a => {
+    if (a.includes(',')) { const [last, first] = a.split(/,(.*)/s); return fullName(first.trim(), last.trim()); }
+    const t = a.split(/\s+/); return t.length > 1 ? fullName(t.slice(0, -1).join(' '), t[t.length - 1]) : a;
+  });
+}
+function bibToPaper(e) {
+  const f = e.fields, g = k => (f[k] !== undefined ? tex(f[k]) : '');
+  const tag = `${e.file} (${e.key})`;
+  const kind = ['article', 'inproceedings', 'phdthesis'].includes(e.type) ? e.type : 'article';
+  const venue = g('journal') || g('booktitle') || g('school') || g('publisher') || g('howpublished') || g('series');
+  const topicsList = g('topics').split(/[,;]/).map(s => s.trim()).filter(Boolean);
+  const kept = e.order.filter(k => !BIB_EXTRA.includes(k)).map(k => `  ${k} = {${f[k].trim()}}`).join(',\n');
+  const doi = g('doi').replace(/^https?:\/\/(dx\.)?doi\.org\//i, '');
+  const p = {
+    title: g('title'), authors: f.author ? bibAuthors(f.author) : [], venue, year: parseInt(g('year'), 10), topics: topicsList,
+    details: { volume: g('volume'), issue: g('number') || g('issue'), pages: g('pages').replace(/\s*[-–—]+\s*/, '–') },
+    links: { doi, pdf: g('pdf'), code: g('code'), data: g('data') },
+    status: g('status') || 'published',
+    bibtype: kind, bibraw: `@${e.type}{${e.key},\n${kept}\n}`
+  };
+  if (g('citations')) p.citations = parseInt(g('citations'), 10);
+  need(tag, p, 'title'); need(tag, p, 'authors', v => v.length > 0, 'an author field');
+  need(tag, p, 'venue', null, 'a journal, booktitle or school field'); need(tag, p, 'year', v => Number.isInteger(v));
+  need(tag, p, 'topics', v => v.length > 0 && v.every(t => topicIds.includes(t)), 'add a line like  topics = {hearing}  inside the entry. Options: ' + topicIds.join(', '));
+  return p;
+}
+function readBibFolder(rel) {
+  const dir = path.join(ROOT, rel);
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir).filter(f => f.endsWith('.bib')).sort()
+    .flatMap(f => parseBib(fs.readFileSync(path.join(dir, f), 'utf8'), `${rel}/${f}`)).map(bibToPaper);
+}
+
+papers.push(...readBibFolder('data/papers'));
+papers.sort((a, b) => b.year - a.year || a.title.localeCompare(b.title));
+
+/* citation counts: data/citations.json is written by tools/fetch-citations.js (OpenAlex) before each build */
+const paperId = p => p.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80);
+if (process.argv.includes('--papers-json')) {
+  console.log(JSON.stringify(papers.map(p => ({ id: paperId(p), title: p.title, authors: p.authors, year: p.year, doi: (p.links || {}).doi || '' }))));
+  process.exit(0);
+}
+{ const seen = new Set(); papers.forEach(p => { const id = paperId(p); if (seen.has(id)) warnings.push(`two papers have the same title: "${p.title}". Keep only one (your JSON files and papers.bib may overlap).`); seen.add(id); }); }
+const cites = fs.existsSync(path.join(ROOT, 'data/citations.json')) ? (readJSON('data/citations.json') || {}) : {};
+papers.forEach(p => { const n = cites[paperId(p)]; if (Number.isInteger(n)) p.citations = n; });
+const totalCites = papers.reduce((s, p) => s + (Number.isInteger(p.citations) ? p.citations : 0), 0);
+
+const presFile = fs.existsSync(path.join(ROOT, 'data/presentations.json')) ? readJSON('data/presentations.json') : [];
+if (!Array.isArray(presFile)) errors.push('data/presentations.json: should be a list, like [ {...}, {...} ]');
+const presAll = [...readFolder('data/presentations'), ...(Array.isArray(presFile) ? presFile : []).map((data, i) => ({ file: `data/presentations.json (entry ${i + 1}${data && data.title ? ': ' + data.title : ''})`, data }))];
+const talks = presAll.map(({ file, data }) => {
   need(file, data, 'title', v => typeof v === 'string');
   need(file, data, 'type', v => PRES_TYPES.includes(v), 'one of: ' + PRES_TYPES.join(', '));
   need(file, data, 'venue', v => typeof v === 'string');
@@ -95,7 +188,7 @@ lately.forEach(c => (c.items || []).forEach(t => { if (/^\[/.test(t) && !/\]\(/.
 links.forEach(l => { if (!l.url) warnings.push(`data/links.json: "${l.name}" has no url yet, so it is left off the Contact page`); });
 
 /* ---------- shared pieces ---------- */
-const TABS = [
+const ALL_TABS = [
   { id: 'home', label: 'Home', color: '#FF5A4A', href: '/' },
   { id: 'about', label: 'About', color: '#FF9F1C', href: '/about/' },
   { id: 'papers', label: 'Papers', color: '#FFD43B', href: '/papers/' },
@@ -104,11 +197,17 @@ const TABS = [
   { id: 'consulting', label: 'Consulting', color: '#B08CFF', href: '/consulting/' },
   { id: 'contact', label: 'Contact', color: '#FF7EB6', href: '/contact/' }
 ];
-const RAINBOW = TABS.map(t => t.color);
+const HIDE = Array.isArray(site.hide) ? site.hide : [];
+HIDE.forEach(id => { if (!ALL_TABS.slice(1).some(t => t.id === id)) errors.push(`data/site.json: "hide" has an unknown page "${id}". Use: ${ALL_TABS.slice(1).map(t => t.id).join(', ')}`); });
+const TABS = ALL_TABS.filter(t => !HIDE.includes(t.id)); // hidden pages get no tab, no file and no sitemap entry
+const RAINBOW = ALL_TABS.map(t => t.color); // colors stay put even when a tab is hidden
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const head = (title, lede) => `<div class="phead"><h1><span>${esc(title)}</span></h1>${lede ? `<p>${rich(lede)}</p>` : ''}</div>`;
 
+/* file fingerprints, so a changed CSS or JS file is never served stale from a cache */
+const V = Object.fromEntries([['css', 'assets/css/site.css'], ['js', 'assets/js/site.js']].map(([k, f]) =>
+  [k, require('crypto').createHash('md5').update(fs.readFileSync(path.join(ROOT, f))).digest('hex').slice(0, 8)]));
 const an = site.analytics || {};
 if (an.goatcounter && !/^[a-z0-9-]+$/i.test(an.goatcounter)) errors.push('data/site.json: analytics.goatcounter should be just your GoatCounter code, like "jarrodhicks"');
 const analyticsTag = LOCAL ? '' :
@@ -116,6 +215,7 @@ const analyticsTag = LOCAL ? '' :
   (an.cloudflare ? `\n<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "${esc(an.cloudflare)}"}'></script>` : '');
 
 function page({ id, title, desc, body, file }) {
+  if (HIDE.includes(id)) return;
   const tab = TABS.find(t => t.id === id);
   const cur = tab || { label: '404', color: '#FF5A4A' };
   const full = id === 'home' ? `${site.name} | ${site.eyebrow}` : `${title} · ${site.name}`;
@@ -137,9 +237,11 @@ function page({ id, title, desc, body, file }) {
 <meta property="og:image" content="${site.url}/assets/img/jarrod.jpg">
 <meta name="theme-color" content="#FFFFFF">
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 <link rel="preload" href="/assets/fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/inter-tight.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/css/site.css">
+<link rel="stylesheet" href="/assets/css/site.css?v=${V.css}">
 </head>
 <body style="--pc:${cur.color}">
 <a class="skip" href="#main">Skip to content</a>
@@ -152,7 +254,7 @@ ${body}
   </main>
   <footer><span>© ${new Date().getFullYear()} ${esc(site.name)}</span><span>Last updated ${UPDATED}</span></footer>
 </div>
-<script src="/assets/js/site.js" defer></script>${analyticsTag}
+<script src="/assets/js/site.js?v=${V.js}" defer></script>${analyticsTag}
 </body>
 </html>
 `;
@@ -207,6 +309,7 @@ const bibKinds = p => /thesis/i.test(p.venue) ? 'phdthesis' : /conference|sympos
 const bibEsc = s => String(s).replace(/([&%$#_])/g, '\\$1');
 const usedKeys = new Set();
 function bibtex(p) {
+  if (p.bibraw) return p.bibraw;
   const kind = p.bibtype || bibKinds(p), d = p.details || {}, l = p.links || {};
   const first = splitName(p.authors[0]).last;
   const word = (p.title.toLowerCase().match(/[a-z0-9]+/g) || []).find(w => !STOP.has(w)) || 'paper';
@@ -226,7 +329,7 @@ function bibtex(p) {
 }
 function citation(p) {
   const kind = p.bibtype || bibKinds(p), d = p.details || {}, l = p.links || {};
-  const names = p.authors.map(a => { const n = splitName(a); const ini = n.first.split(/\s+/).filter(Boolean).join(' '); return ini ? `${n.last}, ${ini}` : n.last; });
+  const names = p.authors.map(a => { const n = splitName(a); const ini = n.first ? initials(n.first) : ''; return ini ? `${n.last}, ${ini}` : n.last; });
   const au = names.length === 1 ? names[0] : names.slice(0, -1).join(', ') + (names.length > 2 ? ',' : '') + ' & ' + names[names.length - 1];
   let s = `${au} (${p.year}). ${p.title.replace(/[.?!]$/, '')}. `;
   if (kind === 'phdthesis') s += `[Doctoral dissertation, ${p.venue.replace(/^PhD thesis,\s*/i, '')}]. `;
@@ -240,13 +343,15 @@ function citation(p) {
 /* ---------- papers ---------- */
 const topicColor = id => (topics.find(t => t.id === id) || { color: '#cccccc' }).color;
 const years = [...new Set(papers.map(p => p.year))].sort((a, b) => b - a);
-function authorsHTML(p) { return p.authors.map(a => a === site.me ? `<b>${esc(a)}</b>` : esc(a)).join(', '); }
+const lastOf = a => a.trim().split(/\s+/).pop().toLowerCase();
+const isMe = a => lastOf(a) === lastOf(site.me) && a.trim().charAt(0).toLowerCase() === site.me.trim().charAt(0).toLowerCase(); /* "J. M. Hicks" and "Jarrod M. Hicks" both match */
+function authorsHTML(p) { return p.authors.map(a => isMe(a) ? `<b>${esc(a)}</b>` : esc(a)).join(', '); }
 function paperHTML(p) {
   const d = p.details || {};
   const vol = [d.volume && 'vol. ' + d.volume, d.pages].filter(Boolean).join(', ');
   const l = p.links || {};
   const tags = p.topics.map(t => `<span class="tag t" style="--c:${topicColor(t)}">${esc(t)}</span>`).join('') +
-    (typeof p.citations === 'number' ? `<span class="tag">cited by ${p.citations}</span>` : '') +
+    (p.citations > 0 ? `<span class="tag">cited by ${p.citations}</span>` : '') +
     (l.doi ? `<a class="tag" href="https://doi.org/${esc(l.doi)}" target="_blank" rel="noopener">DOI ↗</a>` : '') +
     (l.pdf ? `<a class="tag" href="${esc(l.pdf)}">PDF ↗</a>` : '') +
     (l.code ? `<a class="tag" href="${esc(l.code)}" target="_blank" rel="noopener">code ↗</a>` : '') +
@@ -263,6 +368,8 @@ function paperHTML(p) {
 }
 const papersBody = `    <section>
       ${head('Papers', site.ledes.papers)}
+      ${totalCites ? `<div class="stats"><div class="stat"><b>${papers.length}</b><span>papers</span></div><div class="stat"><b>${totalCites.toLocaleString('en-US')}</b><span>citations</span></div></div>
+      <p class="note">Citation counts come from OpenAlex and refresh daily. Google Scholar shows higher numbers.</p>` : ''}
       <input type="search" id="q" placeholder="search titles, authors, venues" aria-label="Search papers">
       <div class="filters">
         <div class="frow"><span class="flab">Topics</span><button type="button" class="chip all" data-topic="" aria-pressed="true">all</button>${topics.map(t => `<button type="button" class="chip" data-topic="${esc(t.id)}" style="--c:${t.color};--d:${t.dark || t.color}" aria-pressed="false">${esc(t.id)}</button>`).join('')}</div>
@@ -279,14 +386,16 @@ ${papers.map(paperHTML).join('\n')}
 function ticketHTML(t) {
   const [y, m] = t.date.split('-');
   const l = t.links || {};
-  const lk = LINK_KEYS.filter(k => l[k]).map(k => `<a class="in" href="${esc(l[k])}" target="_blank" rel="noopener">${k}</a>`).join('');
+  const lk = LINK_KEYS.filter(k => l[k]).map(k => `<a class="in" href="${esc(l[k])}" target="_blank" rel="noopener">${LINK_LABEL[k] || k}</a>`).join('');
   const text = [t.title, t.venue, t.city, t.type, y].filter(Boolean).join(' ').toLowerCase();
-  return `        <article class="tk" data-year="${y}" data-topics="${esc(t.type)}" data-text="${esc(text)}"><div class="s"><i>${MON[+m - 1]}</i><b>${y}</b></div><div class="m"><span class="tag t" style="--c:${PRES_COLOR[t.type]}">${esc(t.type)}</span><h3>${esc(t.title)}</h3><p>${esc(t.venue)}${t.city ? ' · ' + esc(t.city) : ''}</p><div class="lk">${lk}</div></div></article>`;
+  return `        <article class="tk" data-year="${y}" data-topics="${esc(t.type)}" data-text="${esc(text)}"><div class="s"><i>${MON[+m - 1]}</i><b>${y}</b></div><div class="m"><span class="tag t" style="--c:${PRES_COLOR[t.type]}">${esc(t.type)}</span>${isUpcoming(t) ? '<span class="tag soon">upcoming</span>' : ''}<h3>${esc(t.title)}</h3><p>${esc(t.venue)}${t.city ? '<span class="city">' + esc(t.city) + '</span>' : ''}</p><div class="lk">${lk}</div></div></article>`;
 }
-const nTalks = talks.filter(t => t.type === 'talk').length;
-const nPosters = talks.filter(t => t.type === 'poster').length;
-const nConfs = talks.filter(t => t.conference !== false).length;
-const cityCount = new Set(talks.map(t => (t.city || '').trim().toLowerCase()).filter(c => c && !c.startsWith('['))).size;
+/* the stats count only what has already happened */
+const given = talks.filter(t => !isUpcoming(t));
+const nTalks = given.filter(t => t.type === 'talk').length;
+const nPosters = given.filter(t => t.type === 'poster').length;
+const nConfs = given.filter(t => t.conference !== false).length;
+const cityCount = new Set(given.map(t => (t.city || '').trim().toLowerCase()).filter(c => c && !c.startsWith('['))).size;
 const presYears = [...new Set(talks.map(t => t.date.slice(0, 4)))].sort((a, b) => b - a);
 const presGroups = presYears.map(y => {
   const items = talks.filter(t => t.date.startsWith(y));
