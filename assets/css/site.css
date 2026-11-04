@@ -178,8 +178,9 @@ button.tag[aria-expanded=true]{background:var(--ink);color:var(--bg)}
 .cc{border:2px solid var(--ink);border-radius:18px;overflow:hidden;background:var(--bg);display:flex;flex-direction:column}
 .cc .art{border-bottom:2px solid var(--ink);background:var(--soft);display:grid;place-items:center;padding:14px;height:150px}
 .cc .art svg{height:100%;width:auto;max-width:100%}
-.cc .bd{padding:18px 20px 20px;display:flex;flex-direction:column;gap:6px;flex:1}
-.cc p{margin:0;font-size:15px;color:var(--mute)}
+.cc .bd{padding:18px 22px 22px;display:flex;flex-direction:column;gap:8px;flex:1}
+.cc h3{font-size:22px;margin:0}
+.cc p{margin:0;font-size:17px;line-height:1.4;color:var(--ink);text-wrap:balance}
 
 /* contact */
 .email{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 22px}
