@@ -1,0 +1,12 @@
+{
+  "name": "jarrodmhicks.github.io",
+  "private": true,
+  "description": "Personal site for Jarrod M. Hicks. Plain HTML, CSS and JS built from small JSON files.",
+  "scripts": {
+    "build": "node build.js",
+    "new:paper": "node tools/new.js paper",
+    "new:presentation": "node tools/new.js presentation",
+    "serve": "node build.js && python3 -m http.server 8000 --directory dist",
+    "preview": "node build.js --local && echo Open dist/index.html in your browser"
+  }
+}

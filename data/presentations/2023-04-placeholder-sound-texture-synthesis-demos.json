@@ -1,0 +1,12 @@
+{
+  "title": "Sound texture synthesis demos",
+  "type": "talk",
+  "venue": "Museum of Science",
+  "city": "Boston",
+  "date": "2023-04",
+  "conference": false,
+  "links": {
+    "video": "https://example.com/video"
+  },
+  "placeholder": true
+}

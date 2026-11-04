@@ -1,0 +1,12 @@
+{
+  "title": "How textures help us hear in noise",
+  "type": "talk",
+  "venue": "CNS",
+  "city": "Boston",
+  "date": "2026-03",
+  "conference": true,
+  "links": {
+    "slides": "https://example.com/slides"
+  },
+  "placeholder": true
+}
