@@ -109,6 +109,12 @@ const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct
 
 const head = (title, lede) => `<div class="phead"><h1><span>${esc(title)}</span></h1>${lede ? `<p>${rich(lede)}</p>` : ''}</div>`;
 
+const an = site.analytics || {};
+if (an.goatcounter && !/^[a-z0-9-]+$/i.test(an.goatcounter)) errors.push('data/site.json: analytics.goatcounter should be just your GoatCounter code, like "jarrodhicks"');
+const analyticsTag = LOCAL ? '' :
+  (an.goatcounter ? `\n<script data-goatcounter="https://${an.goatcounter}.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>` : '') +
+  (an.cloudflare ? `\n<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "${esc(an.cloudflare)}"}'></script>` : '');
+
 function page({ id, title, desc, body, file }) {
   const tab = TABS.find(t => t.id === id);
   const cur = tab || { label: '404', color: '#FF5A4A' };
@@ -146,7 +152,7 @@ ${body}
   </main>
   <footer><span>© ${new Date().getFullYear()} ${esc(site.name)}</span><span>Last updated ${UPDATED}</span></footer>
 </div>
-<script src="/assets/js/site.js" defer></script>
+<script src="/assets/js/site.js" defer></script>${analyticsTag}
 </body>
 </html>
 `;
@@ -161,6 +167,8 @@ ${body}
 
 /* ---------- home: badge on a lanyard ---------- */
 const LANYARD = `<svg viewBox="0 0 200 100" aria-hidden="true"><defs><path id="la" d="M31 0L96 66"/><path id="lb" d="M104 66L169 0"/></defs><polygon points="180,0 154,0 90,70 110,70" fill="#15181F"/><polygon points="20,0 46,0 110,70 90,70" fill="#15181F"/><g font-family="JetBrains Mono,monospace" font-size="7.6" fill="#fff" letter-spacing=".6"><text dy="2.7"><textPath href="#la" startOffset="9">psychophyshicks</textPath></text><text dy="2.7"><textPath href="#lb" startOffset="9">psychophyshicks</textPath></text></g><rect x="91" y="66" width="18" height="30" rx="4" fill="#15181F"/><rect x="88" y="74" width="24" height="8" rx="2.5" fill="#C9CED8" stroke="#121826" stroke-width="3"/><path d="M96 84v10M104 84v10" stroke="#fff" stroke-width="1.5" stroke-dasharray="2 3" opacity=".7"/></svg>`;
+
+const EMAIL_ENC = Buffer.from(site.email).toString('base64'); // the address is never written into the page as plain text
 
 const homeBody = `    <section>
       <div class="hero">
@@ -191,6 +199,44 @@ ${timeline.map((t, i) => `            <li style="--c:${RAINBOW[i % RAINBOW.lengt
       </div>
     </section>`;
 
+/* ---------- citations: BibTeX and a plain-text reference, built from the paper data ---------- */
+const STOP = new Set(['a', 'an', 'the', 'of', 'on', 'in', 'and', 'for', 'to', 'with', 'how', 'is', 'are']);
+const ascii = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+const splitName = a => { const t = a.trim().split(/\s+/); return { last: t[t.length - 1], first: t.slice(0, -1).join(' ') }; };
+const bibKinds = p => /thesis/i.test(p.venue) ? 'phdthesis' : /conference|symposium|workshop|meeting|\bCCN\b/i.test(p.venue) ? 'inproceedings' : 'article';
+const bibEsc = s => String(s).replace(/([&%$#_])/g, '\\$1');
+const usedKeys = new Set();
+function bibtex(p) {
+  const kind = p.bibtype || bibKinds(p), d = p.details || {}, l = p.links || {};
+  const first = splitName(p.authors[0]).last;
+  const word = (p.title.toLowerCase().match(/[a-z0-9]+/g) || []).find(w => !STOP.has(w)) || 'paper';
+  let key = ascii(first) + p.year + word, k = key, i = 0;
+  while (usedKeys.has(k)) k = key + String.fromCharCode(97 + i++);
+  usedKeys.add(k);
+  const f = [['author', p.authors.map(a => { const n = splitName(a); return n.first ? `${n.last}, ${n.first}` : n.last; }).join(' and ')], ['title', '{' + bibEsc(p.title) + '}']];
+  if (kind === 'article') f.push(['journal', bibEsc(p.venue)]);
+  else if (kind === 'inproceedings') f.push(['booktitle', bibEsc(p.venue)]);
+  else f.push(['school', bibEsc(p.venue.replace(/^PhD thesis,\s*/i, ''))]);
+  f.push(['year', p.year]);
+  if (d.volume && kind === 'article') f.push(['volume', d.volume]);
+  if (d.issue && kind === 'article') f.push(['number', d.issue]);
+  if (d.pages) f.push(['pages', String(d.pages).replace(/[–—]/g, '--')]);
+  if (l.doi) f.push(['doi', l.doi]);
+  return `@${kind}{${k},\n${f.map(([n, v]) => `  ${n} = {${v}}`).join(',\n')}\n}`;
+}
+function citation(p) {
+  const kind = p.bibtype || bibKinds(p), d = p.details || {}, l = p.links || {};
+  const names = p.authors.map(a => { const n = splitName(a); const ini = n.first.split(/\s+/).filter(Boolean).join(' '); return ini ? `${n.last}, ${ini}` : n.last; });
+  const au = names.length === 1 ? names[0] : names.slice(0, -1).join(', ') + (names.length > 2 ? ',' : '') + ' & ' + names[names.length - 1];
+  let s = `${au} (${p.year}). ${p.title.replace(/[.?!]$/, '')}. `;
+  if (kind === 'phdthesis') s += `[Doctoral dissertation, ${p.venue.replace(/^PhD thesis,\s*/i, '')}]. `;
+  else if (kind === 'inproceedings') s += `In ${p.venue}. `;
+  else s += `${p.venue}` + (d.volume ? `, ${d.volume}` : '') + (d.issue ? `(${d.issue})` : '') + (d.pages ? `, ${d.pages}` : '') + '. ';
+  if (kind === 'inproceedings' && d.pages) s = s.trimEnd() + ` ${d.pages}. `;
+  if (l.doi) s += `https://doi.org/${l.doi}`;
+  return s.trim();
+}
+
 /* ---------- papers ---------- */
 const topicColor = id => (topics.find(t => t.id === id) || { color: '#cccccc' }).color;
 const years = [...new Set(papers.map(p => p.year))].sort((a, b) => b - a);
@@ -206,11 +252,13 @@ function paperHTML(p) {
     (l.code ? `<a class="tag" href="${esc(l.code)}" target="_blank" rel="noopener">code ↗</a>` : '') +
     (l.data ? `<a class="tag" href="${esc(l.data)}" target="_blank" rel="noopener">data ↗</a>` : '');
   const text = [p.title, p.authors.join(' '), p.venue, p.year].join(' ').toLowerCase();
+  const bib = bibtex(p), cite = citation(p);
   return `      <article class="paper" data-year="${p.year}" data-topics="${esc(p.topics.join('|'))}" data-text="${esc(text)}">
         <span class="yrm">${p.year}</span>
         <h3>${esc(p.title)}</h3>
         <p class="meta">${authorsHTML(p)}<br>${esc(p.venue)}${vol ? ', ' + esc(vol) : ''}</p>
-        <div class="pl">${tags}</div>
+        <div class="pl">${tags}<button type="button" class="tag cite-btn" aria-expanded="false">cite</button></div>
+        <div class="cite" hidden><pre>${esc(bib)}</pre><div class="cite-actions"><button type="button" class="tag" data-copy="${esc(bib)}">copy BibTeX</button><button type="button" class="tag" data-copy="${esc(cite)}">copy citation</button></div></div>
       </article>`;
 }
 const papersBody = `    <section>
@@ -298,7 +346,7 @@ const ICON_COLOR = ['#FF5A4A', '#FF9F1C', '#4CD07D', '#4D9BFF', '#B08CFF', '#FF7
 const shown = links.filter(l => l.url);
 const contactBody = `    <section>
       ${head('Contact', site.ledes.contact)}
-      <div class="email"><code>${esc(site.email)}</code><button class="btn cp" type="button" data-copy="${esc(site.email)}">copy email</button></div>
+      <div class="email"><code id="em" data-e="${EMAIL_ENC}">(turn on JavaScript to see my email)</code><button class="btn cp" type="button" data-e="${EMAIL_ENC}">copy email</button></div>
       <div class="pills">
 ${shown.map((l, i) => `        <a class="pill" href="${esc(l.url)}" target="_blank" rel="noopener">${(ICON[l.icon] || ICON.other)(ICON_COLOR[i % ICON_COLOR.length])}${esc(l.name)}</a>`).join('\n')}
       </div>

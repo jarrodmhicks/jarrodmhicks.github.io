@@ -117,7 +117,13 @@ input[type=search]{width:100%;font:400 14px var(--f-mono);color:var(--ink);backg
 .pl{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .tag{font:500 11px var(--f-mono);border:1.5px solid var(--ink);color:var(--ink);border-radius:8px;padding:0 7px;display:inline-flex;align-items:center;line-height:1.55;text-decoration:none;background:transparent}
 .tag.t{background:var(--c);color:#111;border-color:#111}
-a.tag:hover{background:var(--ink);color:var(--bg)}
+a.tag:hover,button.tag:hover{background:var(--ink);color:var(--bg)}
+button.tag{cursor:pointer;font-family:var(--f-mono)}
+button.tag[aria-expanded=true]{background:var(--ink);color:var(--bg)}
+.cite{margin-top:12px;border:2px dashed var(--ink);border-radius:12px;background:var(--soft);padding:10px 12px}
+.cite[hidden]{display:none}
+.cite pre{margin:0 0 10px;font:400 11.5px/1.5 var(--f-mono);white-space:pre-wrap;overflow-wrap:anywhere;max-height:220px;overflow:auto;color:var(--ink)}
+.cite-actions{display:flex;gap:8px;flex-wrap:wrap}
 
 /* presentations */
 .stats{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px}

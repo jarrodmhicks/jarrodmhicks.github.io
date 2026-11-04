@@ -68,6 +68,8 @@ This creates `data/papers/hicks-2027-short-title.json`. Open it and fill it in:
 - `citations` is optional. When it is a number, a "cited by" tag appears. Copy it from Google Scholar when you update, since Scholar has no public data feed.
 - Empty links are left off the page.
 
+Each paper gets a **cite** tag that opens its BibTeX with "copy BibTeX" and "copy citation" buttons. Both are built from the fields above. The type is guessed from the venue (a venue with "thesis" becomes a thesis, one with "conference" or "CCN" a conference paper, everything else a journal article). To force one, add `"bibtype": "article"`, `"inproceedings"` or `"phdthesis"`.
+
 ### Add a presentation
 
 ```
@@ -77,6 +79,11 @@ node tools/new.js presentation "Talk title" 2027-03
 Fields: `type` is `talk` or `poster`. `date` is `YYYY-MM` (or `YYYY-MM-DD`). `city` feeds the "cities" count (each city counted once). `conference` is `true` for a conference or meeting and `false` for something like a university seminar; it feeds the "conferences" count (every one counts, even at the same meeting twice). Links are optional and only show when filled in: `slides`, `poster`, `video`, `code`, `data`, `demo`.
 
 The twelve presentations that came with this site are made-up placeholders (`"placeholder": true`, with `example.com` links). Replace them with real ones; every build lists the placeholders that are left. The Presentations page groups tickets by year and has a search box, a type filter and a year dropdown, like Papers.
+
+### Email and analytics
+
+- **Email:** The address in `site.json` is stored encoded in the page and filled in by a script, so simple scrapers do not find it. People without JavaScript see "turn on JavaScript to see my email".
+- **Analytics (optional):** In `data/site.json`, put your GoatCounter code in `analytics.goatcounter` (for example `"jarrodhicks"` for jarrodhicks.goatcounter.com), or a Cloudflare Web Analytics token in `analytics.cloudflare`. Empty means no tracking script is added at all. Preview builds (`--local`) never include it.
 
 ### Other files in `data/`
 

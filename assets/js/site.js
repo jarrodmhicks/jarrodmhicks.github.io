@@ -16,25 +16,43 @@
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { menu.hidden = true; mbtn.setAttribute('aria-expanded', 'false'); } });
   }
 
-  /* copy email */
-  $$('[data-copy]').forEach(function (b) {
+  /* the email address is stored encoded in the page and filled in here, so it is not in the HTML for scrapers */
+  var em = $('#em');
+  if (em && em.getAttribute('data-e')) { try { em.textContent = atob(em.getAttribute('data-e')); } catch (e) {} }
+
+  /* copy buttons: email, BibTeX, citation */
+  $$('[data-copy], [data-e]').forEach(function (b) {
+    if (b.tagName !== 'BUTTON') return;
+    var label = b.textContent;
     b.addEventListener('click', function () {
       var text = b.getAttribute('data-copy');
+      if (!text && b.getAttribute('data-e')) { try { text = atob(b.getAttribute('data-e')); } catch (e) { text = ''; } }
       var done = function () {
         b.textContent = 'copied';
         clearTimeout(b._t);
-        b._t = setTimeout(function () { b.textContent = 'copy email'; }, 2200);
+        b._t = setTimeout(function () { b.textContent = label; }, 2200);
       };
       var fallback = function () {
-        var code = $('.email code');
-        if (code && window.getSelection) {
-          var r = document.createRange(); r.selectNodeContents(code);
+        var src = $('#em') && b.getAttribute('data-e') ? $('#em') : (b.closest('.paper') && $('pre', b.closest('.paper')));
+        if (src && window.getSelection) {
+          var r = document.createRange(); r.selectNodeContents(src);
           var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
         }
         b.textContent = 'press ctrl/cmd + c';
+        clearTimeout(b._t);
+        b._t = setTimeout(function () { b.textContent = label; }, 3500);
       };
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
       else fallback();
+    });
+  });
+
+  /* cite panels on papers */
+  $$('.cite-btn').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var panel = b.closest('.paper').querySelector('.cite');
+      panel.hidden = !panel.hidden;
+      b.setAttribute('aria-expanded', String(!panel.hidden));
     });
   });
 

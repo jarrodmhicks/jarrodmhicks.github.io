@@ -22,5 +22,9 @@
     "consulting": "If you are making something about how we see, hear or sense, I am happy to help with the perception side.",
     "contact": "The best way to reach me is email.",
     "lately": "Things I've been up to lately. Use the arrows to go back."
+  },
+  "analytics": {
+    "goatcounter": "",
+    "cloudflare": ""
   }
 }
