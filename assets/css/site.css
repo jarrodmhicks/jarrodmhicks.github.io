@@ -107,10 +107,57 @@ p{max-width:66ch}
 input[type=search]:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px #D5D9E1}
 input[type=search]{width:100%;font:400 14px var(--f-mono);color:var(--ink);background:var(--soft);border:2px solid var(--ink);border-radius:12px;padding:10px 14px}
 .count{font:400 12px var(--f-mono);color:var(--mute);margin-top:6px}
-.paper{border:2px solid var(--ink);border-radius:16px;padding:14px 18px;margin-top:14px;background:var(--bg);transition:transform .15s,box-shadow .15s}
+/* search box with a "/" key hint, and the shortcuts dialog */
+.sbox{position:relative}
+.sbox input[type=search]{padding-right:44px}
+kbd{font:600 11px var(--f-mono);color:var(--ink);background:var(--bg);border:1.5px solid var(--ink);border-radius:6px;padding:1px 6px;box-shadow:1.5px 1.5px 0 var(--ink);white-space:nowrap}
+.sbox kbd{position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none}
+.sbox:focus-within kbd,.sbox.has kbd{display:none}
+.shint{font:400 11.5px var(--f-mono);color:var(--mute);margin:8px 0 0}
+.shint em{font-style:normal;color:var(--ink)}
+.paper.sel{box-shadow:6px 6px 0 var(--pc);transform:translate(-2px,-2px)}
+@media(hover:none),(pointer:coarse){.sbox kbd,.shint,.klink{display:none}}
+.klink{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;opacity:.55;text-decoration:underline dotted;text-underline-offset:3px}
+.klink:hover,.klink:focus-visible{opacity:1;color:var(--ink)}
+dialog#keys{max-width:min(560px,calc(100vw - 32px));width:100%;border:2px solid var(--ink);border-radius:18px;background:var(--bg);color:var(--ink);padding:22px 24px;box-shadow:8px 8px 0 var(--ink)}
+dialog#keys::backdrop{background:rgba(18,24,38,.45)}
+dialog#keys h2{font-family:var(--f-disp);font-variation-settings:'SOFT' 100,'WONK' 1;font-size:26px;margin:0 0 10px}
+dialog#keys h3{font:600 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:18px 0 6px}
+dialog#keys dl{margin:0;display:grid;gap:8px}
+dialog#keys dl>div{display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:baseline}
+dialog#keys dt{white-space:nowrap}
+dialog#keys dd{margin:0;font-size:14px;line-height:1.45}
+dialog#keys dd b{display:inline-block;min-width:1.4em;text-align:center;background:var(--c);border:1.5px solid var(--ink);border-radius:50%;font:700 11px/1.4 var(--f-mono);color:#111}
+dialog#keys .kfoot{font:400 11.5px var(--f-mono);color:var(--mute);margin:16px 0}
+@media(max-width:480px){dialog#keys dl>div{grid-template-columns:1fr;gap:2px}}
+.paper{position:relative;border:2px solid var(--ink);border-radius:16px;padding:14px 18px;margin-top:28px;background:var(--bg);transition:transform .15s,box-shadow .15s}
 .paper:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
 .paper[hidden]{display:none}
 @media(prefers-reduced-motion:reduce){.paper{transition:none}}
+.ql{font:400 11.5px var(--f-mono);color:var(--mute);margin:0 0 9px}
+.ql a{color:var(--mute);text-decoration:underline;text-underline-offset:2px}
+.ql a:hover{color:var(--ink)}
+.ql i{font-style:normal;margin:0 7px}
+.pb{display:flex;gap:12px;align-items:flex-end;justify-content:space-between}
+.pb .pl{flex:1;min-width:0}
+.pb .cite-btn{flex:none}
+/* citation badge on a paper card. body[data-bc] picks its color */
+.cbadge{position:absolute;top:-15px;right:-8px;z-index:1;width:62px;height:62px;border-radius:50%;background:var(--bcol,#FFD43B);color:#111;border:2px solid var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;--r:8deg;transform:rotate(var(--r));box-shadow:3px 3px 0 var(--ink)}
+.cbadge.fmt{font:700 11px var(--f-mono);letter-spacing:.04em;text-transform:uppercase}
+.cbadge.new{background:#FF7EB6;--r:-9deg;font-size:12px}
+.yrm .tag.soon{margin-left:8px;vertical-align:1px}
+@keyframes flip{from{transform:perspective(420px) rotateY(0) rotate(var(--r,0deg))}to{transform:perspective(420px) rotateY(360deg) rotate(var(--r,0deg))}}
+.stat,.cbadge{cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+.flip{animation:flip .8s cubic-bezier(.3,.7,.3,1)}
+@keyframes pop{50%{scale:1.1}}
+@media(prefers-reduced-motion:reduce){.flip{animation:pop .3s ease}}
+.cbadge b{font:700 20px/1 var(--f-body);font-variant-numeric:tabular-nums}
+.cbadge span{font:500 9px var(--f-mono);margin-top:2px}
+.paper.hc h3,.paper.hc .yrm{padding-right:54px}
+[data-bc="yellow"]{--bcol:#FFD43B}[data-bc="blue"]{--bcol:#4D9BFF}[data-bc="pink"]{--bcol:#FF7EB6}[data-bc="ink"]{--bcol:#121826}
+[data-bc="ink"] .cbadge{color:#fff}
+[data-bc="topic"] .cbadge{background:var(--tc)}
+[data-bc="rainbow"] .paper:nth-of-type(7n+1){--bcol:#FF5A4A}[data-bc="rainbow"] .paper:nth-of-type(7n+2){--bcol:#FF9F1C}[data-bc="rainbow"] .paper:nth-of-type(7n+3){--bcol:#FFD43B}[data-bc="rainbow"] .paper:nth-of-type(7n+4){--bcol:#4CD07D}[data-bc="rainbow"] .paper:nth-of-type(7n+5){--bcol:#4D9BFF}[data-bc="rainbow"] .paper:nth-of-type(7n+6){--bcol:#B08CFF}[data-bc="rainbow"] .paper:nth-of-type(7n+7){--bcol:#FF7EB6}
 .yrm{display:block;font:500 12px var(--f-mono);color:var(--mute);margin-bottom:4px}
 .meta{font-size:14px;color:var(--mute);margin:2px 0 8px}
 .meta b{color:var(--ink);font-weight:600}
@@ -122,19 +169,51 @@ a.tag:hover,button.tag:hover{background:var(--ink);color:var(--bg)}
 button.tag{cursor:pointer;font-family:var(--f-mono)}
 button.tag[aria-expanded=true]{background:var(--ink);color:var(--bg)}
 .cite{margin-top:12px;border:2px dashed var(--ink);border-radius:12px;background:var(--soft);padding:10px 12px}
-.cite[hidden]{display:none}
 .cite pre{margin:0 0 10px;font:400 11.5px/1.5 var(--f-mono);white-space:pre-wrap;overflow-wrap:anywhere;max-height:220px;overflow:auto;color:var(--ink)}
 .cite-actions{display:flex;gap:8px;flex-wrap:wrap}
 
 /* presentations */
 .stats{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px}
-.note{font:400 12px var(--f-mono);color:var(--mute);margin:-6px 0 18px}
 .stat{border:2px solid var(--ink);border-radius:14px;padding:8px 16px;min-width:110px}
 .stat b{display:block;font:700 26px/1.1 var(--f-body);font-variant-numeric:tabular-nums}
 .stat span{font:400 11px var(--f-mono);color:var(--mute)}
+
+/* totals in the page header (Papers, Presentations). body[data-hd] picks one of six looks */
+.phrow{display:flex;justify-content:space-between;align-items:flex-start;gap:14px 20px;flex-wrap:wrap}
+.phstats{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+.phstats .stat{min-width:0;padding:0;border:0;border-radius:0;background:none}
+/* 1 stickers */
+[data-hd="1"] .phstats{gap:10px}
+[data-hd="1"] .phstats .stat{width:84px;height:84px;border-radius:50%;background:var(--c);border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;--r:-5deg;transform:rotate(var(--r))}
+[data-hd="1"] .phstats .stat:nth-child(even){--r:5deg}
+[data-hd="1"] .phstats .stat b{font-size:24px;line-height:1}
+[data-hd="1"] .phstats .stat span{font-size:10px;color:#111;margin-top:3px;letter-spacing:-.01em}
+/* 2 pills */
+[data-hd="2"] .phstats .stat{display:inline-flex;align-items:baseline;gap:7px;background:var(--c);border:2px solid var(--ink);border-radius:999px;padding:3px 14px}
+[data-hd="2"] .phstats .stat b{display:inline;font-size:16px}
+[data-hd="2"] .phstats .stat span{color:#111}
+/* 3 filled cards with a hard shadow */
+[data-hd="3"] .phstats{gap:12px}
+[data-hd="3"] .phstats .stat{background:var(--c);border:2px solid var(--ink);border-radius:12px;padding:5px 14px;box-shadow:3px 3px 0 var(--ink)}
+[data-hd="3"] .phstats .stat b{font-size:22px}
+[data-hd="3"] .phstats .stat span{color:#111}
+/* 4 tab on top */
+[data-hd="4"] .phstats .stat{display:flex;flex-direction:column-reverse;border:2px solid var(--ink);border-radius:10px;overflow:hidden;min-width:70px}
+[data-hd="4"] .phstats .stat b{font-size:22px;padding:3px 12px 4px;text-align:center}
+[data-hd="4"] .phstats .stat span{background:var(--c);color:#111;border-bottom:2px solid var(--ink);padding:1px 10px;text-align:center}
+/* 5 quiet, with a colored dot */
+[data-hd="5"] .phstats .stat{display:flex;align-items:center;gap:8px;border:2px solid var(--ink);border-radius:12px;padding:4px 12px}
+[data-hd="5"] .phstats .stat:before{content:'';width:10px;height:10px;border-radius:50%;background:var(--c);border:1.5px solid #111;flex:none}
+[data-hd="5"] .phstats .stat b{font-size:18px}
+/* 6 one strip, numbers highlighted like the page titles */
+[data-hd="6"] .phstats{gap:0;border:2px solid var(--ink);border-radius:14px;padding:6px 0}
+[data-hd="6"] .phstats .stat{padding:0 14px;border-left:2px dashed var(--ink);display:flex;align-items:baseline;gap:7px}
+[data-hd="6"] .phstats .stat:first-child{border-left:0}
+[data-hd="6"] .phstats .stat b{font-size:22px;line-height:1.2;padding:0 4px;background:linear-gradient(transparent 52%,var(--c) 52%,var(--c) 88%,transparent 88%)}
+@media(max-width:640px){.phstats{justify-content:flex-start}}
 .ygrp{margin-top:22px}
 .ygrp[hidden]{display:none}
-.ygrp h2{font:700 13px var(--f-mono);letter-spacing:.08em;margin:0 0 10px;display:flex;align-items:center;gap:10px;color:var(--ink)}
+.ygrp h2{font:700 13px var(--f-mono);letter-spacing:.08em;margin:0 0 -10px;display:flex;align-items:center;gap:10px;color:var(--ink)}
 .ygrp h2 i{font:400 11px var(--f-mono);color:var(--mute);font-style:normal}
 .ygrp h2::after{content:'';flex:1;border-top:2px dashed var(--grid)}
 .ygrp h2{order:0}
@@ -212,3 +291,26 @@ a.in:hover{background:var(--pc);border-radius:4px 4px 0 0}
 @keyframes fall{from{transform:translateY(0) rotate(var(--r0))}to{transform:translateY(calc(100vh + 60px)) rotate(var(--r1))}}
 .rain-stop{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:51;pointer-events:auto;font:500 12px var(--f-mono);background:var(--bg);color:var(--ink);border:2px solid var(--ink);border-radius:12px;padding:6px 14px;cursor:pointer;box-shadow:3px 3px 0 var(--ink)}
 .rain-stop:hover{background:var(--ink);color:var(--bg)}
+
+/* ---------- motion (all of it switches off for visitors who ask for reduced motion) ---------- */
+/* cite box: eases open and closed. The wrapper is hidden from tabbing and screen readers while closed. */
+.cw{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s cubic-bezier(.2,.8,.2,1)}
+.cw>.cwi{overflow:hidden;min-height:0;visibility:hidden;transition:visibility 0s .35s}
+.cw.open{grid-template-rows:1fr}
+.cw.open>.cwi{visibility:visible;transition-delay:0s}
+/* page entrance: the first time you open a page in a visit (see the script in each page's head) */
+@keyframes dropIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+@keyframes riseIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes popIn{0%{opacity:0;transform:scale(.3) rotate(calc(var(--r,0deg) - 120deg))}60%{opacity:1;transform:scale(1.14) rotate(var(--r,0deg))}100%{opacity:1;transform:scale(1) rotate(var(--r,0deg))}}
+.enter .tab,.enter .mnav{animation:dropIn .4s both cubic-bezier(.3,1.4,.5,1)}
+.enter .tab:nth-child(2){animation-delay:.03s}.enter .tab:nth-child(3){animation-delay:.06s}.enter .tab:nth-child(4){animation-delay:.09s}.enter .tab:nth-child(5){animation-delay:.12s}.enter .tab:nth-child(6){animation-delay:.15s}.enter .tab:nth-child(7){animation-delay:.18s}
+.enter .panel h1{animation:riseIn .5s .1s both cubic-bezier(.2,.8,.2,1)}
+.enter .phstats .stat{animation:popIn .5s .25s both}
+.enter .phstats .stat:nth-child(2){animation-delay:.31s}.enter .phstats .stat:nth-child(3){animation-delay:.37s}.enter .phstats .stat:nth-child(4){animation-delay:.43s}.enter .phstats .stat:nth-child(5){animation-delay:.49s}.enter .phstats .stat:nth-child(6){animation-delay:.55s}.enter .phstats .stat:nth-child(7){animation-delay:.61s}
+.enter .paper,.enter .row,.enter .cards>*{animation:riseIn .5s .45s both cubic-bezier(.2,.8,.2,1)}
+.enter .paper:nth-of-type(2),.enter .row:nth-child(2),.enter .cards>:nth-child(2){animation-delay:.53s}
+.enter .paper:nth-of-type(3),.enter .row:nth-child(3),.enter .cards>:nth-child(3){animation-delay:.61s}
+.enter .paper:nth-of-type(4),.enter .row:nth-child(4),.enter .cards>:nth-child(4){animation-delay:.69s}
+.enter .paper:nth-of-type(n+5),.enter .row:nth-child(n+5),.enter .cards>:nth-child(n+5){animation-delay:.76s}
+.enter .paper .cbadge{animation:popIn .45s .7s both}
+@media(prefers-reduced-motion:reduce){.enter *,.cw,.cw>.cwi{animation:none!important;transition:none!important}}

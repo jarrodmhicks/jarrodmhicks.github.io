@@ -59,7 +59,7 @@ const consulting = readJSON('data/consulting.json') || { cards: [] };
 const topicIds = topics.map(t => t.id);
 
 const PRES_TYPES = ['talk', 'poster'];
-const PRES_COLOR = { talk: '#4D9BFF', poster: '#FF9F1C' };
+const PRES_COLOR = { talk: '#FF5A4A', poster: '#FF9F1C' }; /* same as the first two stickers (talks, posters) at the top of Presentations */
 const LINK_KEYS = ['slides', 'poster', 'video', 'code', 'data', 'demo'];
 const LINK_LABEL = { poster: 'pdf' };
 const TODAY = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' }); /* YYYY-MM-DD */
@@ -78,7 +78,7 @@ const papers = readFolder('data/papers').map(({ file, data }) => {
 
 
 /* ---------- papers from .bib files: paste what Google Scholar gives you ---------- */
-const BIB_EXTRA = ['topics', 'pdf', 'code', 'data', 'status', 'citations'];
+const BIB_EXTRA = ['topics', 'pdf', 'code', 'data', 'status', 'citations', 'new'];
 const ACC = { "'": '́', '`': '̀', '"': '̈', '^': '̂', '~': '̃' };
 const tex = s => s.replace(/\\(['`"^~])\s*\{?\\?([a-zA-Z])\}?/g, (m, a, c) => (c + ACC[a]).normalize('NFC'))
   .replace(/\\([&%$#_])/g, '$1').replace(/[{}]/g, '').replace(/\s+/g, ' ').trim();
@@ -120,6 +120,8 @@ function bibAuthors(s) {
     const t = a.split(/\s+/); return t.length > 1 ? fullName(t.slice(0, -1).join(' '), t[t.length - 1]) : a;
   });
 }
+const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+const monthNum = s => { s = String(s || '').trim().toLowerCase(); if (/^\d{1,2}$/.test(s) && +s >= 1 && +s <= 12) return +s; const i = MONTHS.indexOf(s.slice(0, 3)); return i > -1 ? i + 1 : 0; };
 function bibToPaper(e) {
   const f = e.fields, g = k => (f[k] !== undefined ? tex(f[k]) : '');
   const tag = `${e.file} (${e.key})`;
@@ -130,12 +132,14 @@ function bibToPaper(e) {
   const doi = g('doi').replace(/^https?:\/\/(dx\.)?doi\.org\//i, '');
   const p = {
     title: g('title'), authors: f.author ? bibAuthors(f.author) : [], venue, year: parseInt(g('year'), 10), topics: topicsList,
-    details: { volume: g('volume'), issue: g('number') || g('issue'), pages: g('pages').replace(/\s*[-–—]+\s*/, '–') },
+    details: { volume: g('volume'), issue: g('number') || g('issue'), pages: g('pages').replace(/\s*[-–—]+\s*/, '–'), numpages: g('numpages') },
     links: { doi, pdf: g('pdf'), code: g('code'), data: g('data') },
     status: g('status') || 'published',
     bibtype: kind, bibraw: `@${e.type}{${e.key},\n${kept}\n}`
   };
   if (g('citations')) p.citations = parseInt(g('citations'), 10);
+  const mo = monthNum(g('month')); if (mo) p.month = mo;
+  if (/^(true|false)$/i.test(g('new'))) p.new = g('new').toLowerCase() === 'true';
   need(tag, p, 'title'); need(tag, p, 'authors', v => v.length > 0, 'an author field');
   need(tag, p, 'venue', null, 'a journal, booktitle or school field'); need(tag, p, 'year', v => Number.isInteger(v));
   need(tag, p, 'topics', v => v.length > 0 && v.every(t => topicIds.includes(t)), 'add a line like  topics = {hearing}  inside the entry. Options: ' + topicIds.join(', '));
@@ -161,6 +165,7 @@ if (process.argv.includes('--papers-json')) {
 const cites = fs.existsSync(path.join(ROOT, 'data/citations.json')) ? (readJSON('data/citations.json') || {}) : {};
 papers.forEach(p => { const n = cites[paperId(p)]; if (Number.isInteger(n)) p.citations = n; });
 const totalCites = papers.reduce((s, p) => s + (Number.isInteger(p.citations) ? p.citations : 0), 0);
+const hIndex = [...papers.map(p => p.citations || 0)].sort((a, b) => b - a).filter((c, i) => c >= i + 1).length;
 
 const presFile = fs.existsSync(path.join(ROOT, 'data/presentations.json')) ? readJSON('data/presentations.json') : [];
 if (!Array.isArray(presFile)) errors.push('data/presentations.json: should be a list, like [ {...}, {...} ]');
@@ -170,6 +175,8 @@ const talks = presAll.map(({ file, data }) => {
   need(file, data, 'type', v => PRES_TYPES.includes(v), 'one of: ' + PRES_TYPES.join(', '));
   need(file, data, 'venue', v => typeof v === 'string');
   need(file, data, 'date', v => /^\d{4}-\d{2}(-\d{2})?$/.test(v), 'like 2026-11 or 2026-11-02');
+  if (data.topics !== undefined && !(Array.isArray(data.topics) && data.topics.every(t => topicIds.includes(t)))) errors.push(`${file}: "topics" must be a list from data/topics.json: ${topicIds.join(', ')}`);
+  if (data.authors !== undefined && !(Array.isArray(data.authors) && data.authors.length)) errors.push(`${file}: "authors" must be a list of names`);
   if (data.placeholder) placeholders.push(file);
   return data;
 }).sort((a, b) => String(b.date).localeCompare(String(a.date)));
@@ -201,9 +208,21 @@ const HIDE = Array.isArray(site.hide) ? site.hide : [];
 HIDE.forEach(id => { if (!ALL_TABS.slice(1).some(t => t.id === id)) errors.push(`data/site.json: "hide" has an unknown page "${id}". Use: ${ALL_TABS.slice(1).map(t => t.id).join(', ')}`); });
 const TABS = ALL_TABS.filter(t => !HIDE.includes(t.id)); // hidden pages get no tab, no file and no sitemap entry
 const RAINBOW = ALL_TABS.map(t => t.color); // colors stay put even when a tab is hidden
+const HD_STYLE = 1;        /* how the totals at the top of Papers and Presentations look (1-6, see site.css) */
+const BADGE_COLOR = 'yellow'; /* citation badge on paper cards: yellow, rainbow, topic, blue, pink, ink */
+const STAT_TIP = { pages: 'published pages, from page ranges or numpages', 'days since': 'days since your last presentation', journals: 'different journals' };
+const statBadge = (n, label, i) => `<div class="stat" style="--c:${RAINBOW[i % RAINBOW.length]}" title="${esc(STAT_TIP[label] || label)}"><b>${n}</b><span>${label}</span></div>`;
+/* Totals shown in the page headers, in order. Colors follow the rainbow by position:
+   1 red, 2 orange, 3 yellow, 4 green, 5 blue, 6 purple, 7 pink. Keep "citations" third so it matches the yellow paper badges.
+   Papers can use: papers, citations, h-index, i10-index, most cited, cites per paper, co-authors, journals, venues, topics, pages, first author,
+     solo papers, authors per paper, biggest team, with code, with data, with PDF, years active, papers per year, title words, titles with a colon
+   Presentations can use: talks, posters, conferences, cities, countries, upcoming, days to next, days since, on video, with slides, demos, venues,
+     topics, first author, co-presenters, years active, per year, best year */
+const PAPER_STATS = ['papers', 'h-index', 'citations', 'most cited', 'co-authors', 'journals', 'first author'];
+const PRES_STATS = ['talks', 'posters', 'upcoming', 'conferences', 'cities', 'on video', 'days since'];
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-const head = (title, lede) => `<div class="phead"><h1><span>${esc(title)}</span></h1>${lede ? `<p>${rich(lede)}</p>` : ''}</div>`;
+const head = (title, lede, extra) => `<div class="phead">${extra ? `<div class="phrow"><h1><span>${esc(title)}</span></h1><div class="phstats">${extra}</div></div>` : `<h1><span>${esc(title)}</span></h1>`}${lede ? `<p>${rich(lede)}</p>` : ''}</div>`;
 
 /* file fingerprints, so a changed CSS or JS file is never served stale from a cache */
 const V = Object.fromEntries([['css', 'assets/css/site.css'], ['js', 'assets/js/site.js']].map(([k, f]) =>
@@ -214,6 +233,23 @@ const analyticsTag = LOCAL ? '' :
   (an.goatcounter ? `\n<script data-goatcounter="https://${an.goatcounter}.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>` : '') +
   (an.cloudflare ? `\n<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "${esc(an.cloudflare)}"}'></script>` : '');
 
+const keysDialog = `<dialog id="keys" aria-labelledby="keys-t">
+  <h2 id="keys-t">Keyboard shortcuts</h2>
+  <dl>
+    <div><dt><kbd>1</kbd> to <kbd>${TABS.length}</kbd></dt><dd>jump to a page: ${TABS.map((t, i) => `<b style="--c:${t.color}">${i + 1}</b> ${t.label}`).join(' &middot; ')}</dd></div>
+    <div><dt><kbd>/</kbd></dt><dd>search papers (from any page; on Presentations it searches talks). Several words must all match.</dd></div>
+    <div><dt><kbd>Esc</kbd></dt><dd>clear the search, close a menu or this box</dd></div>
+    <div><dt><kbd>?</kbd></dt><dd>open this box</dd></div>
+  </dl>
+  <h3>On Papers and Presentations</h3>
+  <dl>
+    <div><dt><kbd>j</kbd> <kbd>k</kbd></dt><dd>next and previous card</dd></div>
+    <div><dt><kbd>c</kbd></dt><dd>open or close the BibTeX box on the selected paper</dd></div>
+    <div><dt><kbd>s</kbd></dt><dd>switch Papers between most recent and most cited</dd></div>
+  </dl>
+  <p class="kfoot">There is one more, but you will have to find it. Hint: it is a classic.</p>
+  <button type="button" class="btn" id="kclose">close</button>
+</dialog>`;
 function page({ id, title, desc, body, file }) {
   if (HIDE.includes(id)) return;
   const tab = TABS.find(t => t.id === id);
@@ -242,8 +278,9 @@ function page({ id, title, desc, body, file }) {
 <link rel="preload" href="/assets/fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/inter-tight.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/css/site.css?v=${V.css}">
+<script>try{if(!sessionStorage.getItem('entered:'+location.pathname)&&!matchMedia('(prefers-reduced-motion: reduce)').matches)document.documentElement.className='enter'}catch(e){}</script>
 </head>
-<body style="--pc:${cur.color}">
+<body style="--pc:${cur.color}" data-hd="${HD_STYLE}" data-bc="${BADGE_COLOR}">
 <a class="skip" href="#main">Skip to content</a>
 <div class="wrap">
   <a class="brand" href="/">${esc(site.url.replace('https://', ''))}</a>
@@ -252,8 +289,9 @@ function page({ id, title, desc, body, file }) {
   <main class="panel" id="main">
 ${body}
   </main>
-  <footer><span>© ${new Date().getFullYear()} ${esc(site.name)}</span><span>Last updated ${UPDATED}</span></footer>
+  <footer><span>© ${new Date().getFullYear()} ${esc(site.name)}</span><button type="button" class="klink" id="kbtn" aria-haspopup="dialog">keyboard shortcuts</button><span>Last updated ${UPDATED}</span></footer>
 </div>
+${keysDialog}
 <script src="/assets/js/site.js?v=${V.js}" defer></script>${analyticsTag}
 </body>
 </html>
@@ -346,34 +384,74 @@ const years = [...new Set(papers.map(p => p.year))].sort((a, b) => b - a);
 const lastOf = a => a.trim().split(/\s+/).pop().toLowerCase();
 const isMe = a => lastOf(a) === lastOf(site.me) && a.trim().charAt(0).toLowerCase() === site.me.trim().charAt(0).toLowerCase(); /* "J. M. Hicks" and "Jarrod M. Hicks" both match */
 function authorsHTML(p) { return p.authors.map(a => isMe(a) ? `<b>${esc(a)}</b>` : esc(a)).join(', '); }
+/* "new" sticker: shown on a paper that has no citation badge yet and is recent.
+   With a month (month = {oct} in the .bib, or "month": 10 in a JSON file) it means published within the last 7 months.
+   With only a year it means "this calendar year". Override either way with  new = {true}  or  new = {false}  (JSON: "new": true / false). */
+function isNewPaper(p) {
+  if (p.new === true || p.new === false) return p.new;
+  if (p.month) { const days = (new Date(TODAY) - new Date(Date.UTC(p.year, p.month - 1, 1))) / 864e5; return days >= -31 && days <= 215; }
+  return p.year === +TODAY.slice(0, 4);
+}
 function paperHTML(p) {
   const d = p.details || {};
   const vol = [d.volume && 'vol. ' + d.volume, d.pages].filter(Boolean).join(', ');
   const l = p.links || {};
-  const tags = p.topics.map(t => `<span class="tag t" style="--c:${topicColor(t)}">${esc(t)}</span>`).join('') +
-    (p.citations > 0 ? `<span class="tag">cited by ${p.citations}</span>` : '') +
-    (l.doi ? `<a class="tag" href="https://doi.org/${esc(l.doi)}" target="_blank" rel="noopener">DOI ↗</a>` : '') +
-    (l.pdf ? `<a class="tag" href="${esc(l.pdf)}">PDF ↗</a>` : '') +
-    (l.code ? `<a class="tag" href="${esc(l.code)}" target="_blank" rel="noopener">code ↗</a>` : '') +
-    (l.data ? `<a class="tag" href="${esc(l.data)}" target="_blank" rel="noopener">data ↗</a>` : '');
+  const ext = u => `href="${esc(u)}" target="_blank" rel="noopener"`;
+  /* one quiet line: doi, then whatever links exist */
+  const quiet = [l.doi && `<span>doi: <a ${ext('https://doi.org/' + l.doi)}>${esc(l.doi)}</a></span>`, l.pdf && `<a href="${esc(l.pdf)}">PDF</a>`, l.code && `<a ${ext(l.code)}>code</a>`, l.data && `<a ${ext(l.data)}>data</a>`].filter(Boolean).join('<i>·</i>');
+  const tagsHTML = p.topics.map(t => `<span class="tag t" style="--c:${topicColor(t)}">${esc(t)}</span>`).join('');
+  const badge = p.citations > 0 ? `<div class="cbadge" title="${p.citations} citations"><b>${p.citations}</b><span>cited</span></div>`
+    : isNewPaper(p) ? `<div class="cbadge fmt new" title="recent paper, no citations yet">new</div>` : '';
   const text = [p.title, p.authors.join(' '), p.venue, p.year].join(' ').toLowerCase();
   const bib = bibtex(p), cite = citation(p);
-  return `      <article class="paper" data-year="${p.year}" data-topics="${esc(p.topics.join('|'))}" data-text="${esc(text)}">
-        <span class="yrm">${p.year}</span>
+  return `      <article class="paper${badge ? ' hc' : ''}" data-cites="${p.citations || 0}" style="--tc:${topicColor(p.topics[0])}" data-year="${p.year}" data-topics="${esc(p.topics.join('|'))}" data-text="${esc(text)}">
+        ${badge}<span class="yrm">${p.year}</span>
         <h3>${esc(p.title)}</h3>
-        <p class="meta">${authorsHTML(p)}<br>${esc(p.venue)}${vol ? ', ' + esc(vol) : ''}</p>
-        <div class="pl">${tags}<button type="button" class="tag cite-btn" aria-expanded="false">cite</button></div>
-        <div class="cite" hidden><pre>${esc(bib)}</pre><div class="cite-actions"><button type="button" class="tag" data-copy="${esc(bib)}">copy BibTeX</button><button type="button" class="tag" data-copy="${esc(cite)}">copy citation</button></div></div>
+        <p class="meta">${authorsHTML(p)}<br>${esc(p.venue)}${vol ? ', ' + esc(vol) : ''}</p>${quiet ? `\n        <p class="ql">${quiet}</p>` : ''}
+        <div class="pb"><div class="pl">${tagsHTML}</div><button type="button" class="tag cite-btn" aria-expanded="false">cite</button></div>
+        <div class="cw"><div class="cwi"><div class="cite"><pre>${esc(bib)}</pre><div class="cite-actions"><button type="button" class="tag" data-copy="${esc(bib)}">copy BibTeX</button><button type="button" class="tag" data-copy="${esc(cite)}">copy citation</button></div></div></div></div>
       </article>`;
 }
+const chipRow = (g, items) => `<button type="button" class="chip all" data-g="${g}" data-v="" aria-pressed="true">all</button>` + items.map(t => `<button type="button" class="chip" data-g="${g}" data-v="${esc(t.id)}" style="--c:${t.color};--d:${t.dark || t.color}" aria-pressed="false">${esc(t.id)}</button>`).join('');
+const personKey = a => lastOf(a) + '|' + a.trim().charAt(0).toLowerCase();
+function paperStats() {
+  const have = totalCites > 0, n = papers.length, cs = papers.map(p => p.citations || 0), dash = x => have ? x : '–';
+  const pageCount = p => { const m = /(\d+)\s*[–—-]\s*(\d+)/.exec(String((p.details || {}).pages || '')); return m ? Math.max(0, +m[2] - +m[1] + 1) : (+(p.details || {}).numpages || 0); };
+  const isJournal = p => (p.bibtype || bibKinds(p)) === 'article' && p.status !== 'preprint' && !/arxiv|biorxiv|preprint/i.test(p.venue);
+  const uniq = a => new Set(a).size, has = k => papers.filter(p => (p.links || {})[k]).length;
+  const years = n ? Math.max(...papers.map(p => p.year)) - Math.min(...papers.map(p => p.year)) + 1 : 0;
+  const v = {
+    papers: n,
+    citations: dash(totalCites.toLocaleString('en-US')),
+    'h-index': dash(hIndex),
+    'i10-index': have ? cs.filter(c => c >= 10).length : null,
+    'most cited': dash(Math.max(0, ...cs)),
+    'cites per paper': have ? (totalCites / n).toFixed(1) : null,
+    'co-authors': uniq(papers.flatMap(p => p.authors.filter(a => !isMe(a)).map(personKey))),
+    journals: uniq(papers.filter(isJournal).map(p => p.venue.trim().toLowerCase())),
+    pages: papers.reduce((s, p) => s + pageCount(p), 0) || null,
+    venues: uniq(papers.map(p => p.venue.trim().toLowerCase())),
+    topics: uniq(papers.flatMap(p => p.topics)),
+    'first author': papers.filter(p => isMe(p.authors[0])).length,
+    'solo papers': papers.filter(p => p.authors.length === 1).length || null,
+    'authors per paper': n ? (papers.reduce((s, p) => s + p.authors.length, 0) / n).toFixed(1) : null,
+    'biggest team': n ? Math.max(...papers.map(p => p.authors.length)) : null,
+    'with code': has('code') || null, 'with data': has('data') || null, 'with PDF': has('pdf') || null,
+    'years active': years || null,
+    'papers per year': years ? (n / years).toFixed(1) : null,
+    'title words': papers.reduce((s, p) => s + p.title.split(/\s+/).length, 0),
+    'titles with a colon': papers.filter(p => p.title.includes(':')).length || null
+  };
+  return PAPER_STATS.filter(k => v[k] !== null && v[k] !== undefined).map((k, i) => statBadge(v[k], k, i)).join('');
+}
 const papersBody = `    <section>
-      ${head('Papers', site.ledes.papers)}
-      ${totalCites ? `<div class="stats"><div class="stat"><b>${papers.length}</b><span>papers</span></div><div class="stat"><b>${totalCites.toLocaleString('en-US')}</b><span>citations</span></div></div>
-      <p class="note">Citation counts come from OpenAlex and refresh daily. Google Scholar shows higher numbers.</p>` : ''}
-      <input type="search" id="q" placeholder="search titles, authors, venues" aria-label="Search papers">
+      ${head('Papers', site.ledes.papers, paperStats())}
+      <div class="sbox"><input type="search" id="q" placeholder="search titles, authors, venues" aria-label="Search papers" aria-keyshortcuts="/" autocomplete="off"><kbd aria-hidden="true">/</kbd></div>
+      <p class="shint">Press <kbd>/</kbd> to search. Several words must all match, in any order (try <em>mcdermott texture</em>). <kbd>Esc</kbd> clears.</p>
       <div class="filters">
-        <div class="frow"><span class="flab">Topics</span><button type="button" class="chip all" data-topic="" aria-pressed="true">all</button>${topics.map(t => `<button type="button" class="chip" data-topic="${esc(t.id)}" style="--c:${t.color};--d:${t.dark || t.color}" aria-pressed="false">${esc(t.id)}</button>`).join('')}</div>
+        <div class="frow"><span class="flab">Topics</span>${chipRow('topic', topics)}</div>
         <div class="frow"><span class="flab">Year</span><div class="dd"><button type="button" class="ddb" id="yb" aria-haspopup="listbox" aria-expanded="false"><span>all</span><span aria-hidden="true">▾</span></button><ul class="ddl" id="yl" role="listbox" hidden><li><button type="button" role="option" data-year="" aria-selected="true">all</button></li>${years.map(y => `<li><button type="button" role="option" data-year="${y}" aria-selected="false">${y}</button></li>`).join('')}</ul></div></div>
+        ${totalCites ? `<div class="frow"><span class="flab">Sort</span><button type="button" class="chip all" data-g="sort" data-v="year" aria-pressed="true">most recent</button><button type="button" class="chip all" data-g="sort" data-v="cites" aria-pressed="false">most cited</button></div>` : ''}
       </div>
       <div class="count" id="cnt">${papers.length} of ${papers.length} papers</div>
       <div id="plist">
@@ -383,12 +461,18 @@ ${papers.map(paperHTML).join('\n')}
     </section>`;
 
 /* ---------- presentations ---------- */
-function ticketHTML(t) {
+function presHTML(t) {
   const [y, m] = t.date.split('-');
-  const l = t.links || {};
-  const lk = LINK_KEYS.filter(k => l[k]).map(k => `<a class="in" href="${esc(l[k])}" target="_blank" rel="noopener">${LINK_LABEL[k] || k}</a>`).join('');
-  const text = [t.title, t.venue, t.city, t.type, y].filter(Boolean).join(' ').toLowerCase();
-  return `        <article class="tk" data-year="${y}" data-topics="${esc(t.type)}" data-text="${esc(text)}"><div class="s"><i>${MON[+m - 1]}</i><b>${y}</b></div><div class="m"><span class="tag t" style="--c:${PRES_COLOR[t.type]}">${esc(t.type)}</span>${isUpcoming(t) ? '<span class="tag soon">upcoming</span>' : ''}<h3>${esc(t.title)}</h3><p>${esc(t.venue)}${t.city ? '<span class="city">' + esc(t.city) + '</span>' : ''}</p><div class="lk">${lk}</div></div></article>`;
+  const l = t.links || {}, up = isUpcoming(t), authors = t.authors && t.authors.length ? t.authors : [site.me], tps = t.topics || [];
+  const quiet = LINK_KEYS.filter(k => l[k]).map(k => `<a href="${esc(l[k])}" target="_blank" rel="noopener">${LINK_LABEL[k] || k}</a>`).join('<i>·</i>');
+  const tagsHTML = tps.map(x => `<span class="tag t" style="--c:${topicColor(x)}">${esc(x)}</span>`).join('');
+  const text = [t.title, authors.join(' '), t.venue, t.city, t.type, y, tps.join(' ')].filter(Boolean).join(' ').toLowerCase();
+  return `        <article class="paper hc" data-year="${y}" data-upcoming="${up ? 1 : 0}" data-type="${esc(t.type)}" data-topics="${esc(tps.join('|'))}" data-text="${esc(text)}">
+          <div class="cbadge fmt" style="--bcol:${PRES_COLOR[t.type]}" title="${esc(t.type)}">${esc(t.type)}</div>
+          <span class="yrm">${MON[+m - 1]} ${y}</span>
+          <h3>${esc(t.title)}</h3>
+          <p class="meta">${authors.map(a => isMe(a) ? `<b>${esc(a)}</b>` : esc(a)).join(', ')}<br>${esc(t.venue)}${t.city ? '<br>' + esc(t.city) : ''}</p>${quiet ? `\n          <p class="ql">${quiet}</p>` : ''}${tagsHTML ? `\n          <div class="pl">${tagsHTML}</div>` : ''}
+        </article>`;
 }
 /* the stats count only what has already happened */
 const given = talks.filter(t => !isUpcoming(t));
@@ -396,18 +480,48 @@ const nTalks = given.filter(t => t.type === 'talk').length;
 const nPosters = given.filter(t => t.type === 'poster').length;
 const nConfs = given.filter(t => t.conference !== false).length;
 const cityCount = new Set(given.map(t => (t.city || '').trim().toLowerCase()).filter(c => c && !c.startsWith('['))).size;
-const presYears = [...new Set(talks.map(t => t.date.slice(0, 4)))].sort((a, b) => b - a);
-const presGroups = presYears.map(y => {
-  const items = talks.filter(t => t.date.startsWith(y));
-  return `      <section class="ygrp" data-year="${y}"><h2><span>${y}</span><i>${items.length}</i></h2><div class="tix">\n${items.map(ticketHTML).join('\n')}\n      </div></section>`;
-}).join('\n');
+const pastTalks = talks.filter(t => !isUpcoming(t)), soonTalks = talks.filter(isUpcoming).sort((a, c) => String(a.date).localeCompare(String(c.date)));
+const presYears = [...new Set(pastTalks.map(t => t.date.slice(0, 4)))].sort((a, b) => b - a);
+const presGroups = [
+  ...(soonTalks.length ? [`      <section class="ygrp soon" data-year="upcoming"><h2><span>upcoming</span><i>${soonTalks.length}</i></h2><div>\n${soonTalks.map(presHTML).join('\n')}\n      </div></section>`] : []),
+  ...presYears.map(y => {
+    const items = pastTalks.filter(t => t.date.startsWith(y));
+    return `      <section class="ygrp" data-year="${y}"><h2><span>${y}</span><i>${items.length}</i></h2><div>\n${items.map(presHTML).join('\n')}\n      </div></section>`;
+  })
+].join('\n');
+const presTopics = topicIds.filter(id => talks.some(t => (t.topics || []).includes(id)));
+const nUpcoming = talks.filter(isUpcoming).length;
+function presStats() {
+  const uniq = a => new Set(a.filter(Boolean)).size, n = given.length;
+  const hasL = k => given.filter(t => t.links && t.links[k]).length;
+  const yrs = given.map(t => +String(t.date).slice(0, 4));
+  const span = n ? Math.max(...yrs) - Math.min(...yrs) + 1 : 0;
+  const next = talks.filter(isUpcoming).map(t => String(t.date).length > 7 ? String(t.date) : t.date + '-01').sort()[0];
+  const daysToNext = next ? Math.max(0, Math.ceil((new Date(next) - new Date(TODAY)) / 864e5)) : null;
+  const endOf = d => { d = String(d); if (d.length > 7) return d; const [y, m] = d.split('-').map(Number); return d + '-' + String(new Date(y, m, 0).getDate()).padStart(2, '0'); };
+  const lastGiven = n ? Math.max(0, Math.floor((new Date(TODAY) - new Date(given.map(t => endOf(t.date)).sort().pop())) / 864e5)) : null;
+  const perYear = {}; yrs.forEach(y => { perYear[y] = (perYear[y] || 0) + 1; });
+  const bestYear = n ? Object.keys(perYear).sort((a, b) => perYear[b] - perYear[a] || b - a)[0] : null;
+  const v = {
+    talks: nTalks, posters: nPosters, conferences: nConfs, cities: cityCount || '–',
+    countries: uniq(given.map(t => t.country && t.country.trim().toLowerCase())) || null,
+    upcoming: nUpcoming, 'days to next': daysToNext, 'days since': lastGiven,
+    'on video': hasL('video'), 'with slides': hasL('slides') || null, demos: hasL('demo') || null,
+    venues: uniq(given.map(t => t.venue.trim().toLowerCase())),
+    topics: uniq(given.flatMap(t => t.topics || [])) || null,
+    'first author': given.some(t => t.authors) ? given.filter(t => t.authors && isMe(t.authors[0])).length : null,
+    'co-presenters': given.some(t => t.authors) ? uniq(given.flatMap(t => (t.authors || []).filter(a => !isMe(a)).map(personKey))) : null,
+    'years active': span || null, 'per year': span ? (n / span).toFixed(1) : null, 'best year': bestYear
+  };
+  return PRES_STATS.filter(k => v[k] !== null && v[k] !== undefined).map((k, i) => statBadge(v[k], k, i)).join('');
+}
 const presentationsBody = `    <section>
-      ${head('Presentations', site.ledes.presentations)}
-      <div class="stats"><div class="stat"><b>${nTalks}</b><span>talks</span></div><div class="stat"><b>${nPosters}</b><span>posters</span></div><div class="stat"><b>${nConfs}</b><span>conferences</span></div><div class="stat"><b>${cityCount || '–'}</b><span>cities</span></div></div>
-      <input type="search" id="q" placeholder="search titles, venues, cities" aria-label="Search presentations">
+      ${head('Presentations', site.ledes.presentations, presStats())}
+      <div class="sbox"><input type="search" id="q" placeholder="search titles, venues, cities" aria-label="Search presentations" aria-keyshortcuts="/" autocomplete="off"><kbd aria-hidden="true">/</kbd></div>
+      <p class="shint">Press <kbd>/</kbd> to search. Several words must all match, in any order (try <em>poster boston</em>). <kbd>Esc</kbd> clears.</p>
       <div class="filters">
-        <div class="frow"><span class="flab">Type</span><button type="button" class="chip all" data-topic="" aria-pressed="true">all</button>${PRES_TYPES.map(t => `<button type="button" class="chip" data-topic="${t}" style="--c:${PRES_COLOR[t]};--d:${PRES_COLOR[t]}" aria-pressed="false">${t}</button>`).join('')}</div>
-        <div class="frow"><span class="flab">Year</span><div class="dd"><button type="button" class="ddb" id="yb" aria-haspopup="listbox" aria-expanded="false"><span>all</span><span aria-hidden="true">▾</span></button><ul class="ddl" id="yl" role="listbox" hidden><li><button type="button" role="option" data-year="" aria-selected="true">all</button></li>${presYears.map(y => `<li><button type="button" role="option" data-year="${y}" aria-selected="false">${y}</button></li>`).join('')}</ul></div></div>
+${presTopics.length ? `        <div class="frow"><span class="flab">Topics</span>${chipRow('topic', presTopics.map(id => ({ id, color: topicColor(id), dark: (topics.find(x => x.id === id) || {}).dark })))}</div>\n` : ''}        <div class="frow"><span class="flab">Format</span>${chipRow('type', PRES_TYPES.map(id => ({ id, color: PRES_COLOR[id] })))}</div>
+        <div class="frow"><span class="flab">Year</span><div class="dd"><button type="button" class="ddb" id="yb" aria-haspopup="listbox" aria-expanded="false"><span>all</span><span aria-hidden="true">▾</span></button><ul class="ddl" id="yl" role="listbox" hidden><li><button type="button" role="option" data-year="" aria-selected="true">all</button></li>${nUpcoming ? '<li><button type="button" role="option" data-year="upcoming" aria-selected="false">upcoming</button></li>' : ''}${presYears.map(y => `<li><button type="button" role="option" data-year="${y}" aria-selected="false">${y}</button></li>`).join('')}</ul></div></div>
       </div>
       <div class="count" id="cnt" data-unit="presentations">${talks.length} of ${talks.length} presentations</div>
       <div id="tlist">

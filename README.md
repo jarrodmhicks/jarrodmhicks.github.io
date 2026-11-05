@@ -68,6 +68,12 @@ This creates `data/papers/hicks-2027-short-title.json`. Open it and fill it in:
 - `citations` is optional. When it is a number, a "cited by" tag appears. Copy it from Google Scholar when you update, since Scholar has no public data feed.
 - Empty links are left off the page.
 
+**New sticker.** A paper with no citations yet gets a pink **new** sticker where the citation badge would go, if it is recent. Add the month so it is accurate: `month = {oct}` in the `.bib` entry (or `"month": 10` in a JSON file) means "new for about 7 months". With only a year, a paper counts as new for that calendar year. To force it either way, add `new = {true}` or `new = {false}` (JSON: `"new": true`). Once a paper has citations, the yellow citation badge replaces it.
+
+**Motion.** Small animations are built in and switch off for visitors who set "reduce motion": the first time you open a page in a visit its tabs, title, stickers and cards animate in; sorting glides cards to their new places; filters fold non-matching cards away; the cite box eases open; paging back through Lately flicks the top card off the stack. Nothing needs configuring.
+
+**Keyboard shortcuts.** `1`-`7` jump to the pages, `/` searches (from any page it opens Papers with the search box focused), `?` shows the full list, `Esc` clears the search. On Papers and Presentations, `j`/`k` step through the cards, `c` opens the BibTeX box and `s` switches the sort. The list is the "keyboard shortcuts" link in the footer (hidden on phones). Searching several words matches papers containing all of them.
+
 Each paper gets a **cite** tag that opens its BibTeX with "copy BibTeX" and "copy citation" buttons. Both are built from the fields above. The type is guessed from the venue (a venue with "thesis" becomes a thesis, one with "conference" or "CCN" a conference paper, everything else a journal article). To force one, add `"bibtype": "article"`, `"inproceedings"` or `"phdthesis"`.
 
 ### Add a presentation
