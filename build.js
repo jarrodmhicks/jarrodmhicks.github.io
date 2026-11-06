@@ -180,7 +180,7 @@ const talks = presAll.map(({ file, data }) => {
   if (data.authors !== undefined && !(Array.isArray(data.authors) && data.authors.length)) errors.push(`${file}: "authors" must be a list of names`);
   if (data.placeholder) placeholders.push(file);
   return data;
-}).sort((a, b) => String(b.date).localeCompare(String(a.date)));
+}).filter(t => t && typeof t.date === 'string').sort((a, b) => String(b.date).localeCompare(String(a.date)));
 
 ['name', 'url', 'email', 'me', 'intro', 'description'].forEach(f => need('data/site.json', site, f));
 if (!Array.isArray(site.tagline) || site.tagline.length !== 2) errors.push('data/site.json: "tagline" must be two strings, like ["making senses", "make sense"]');
