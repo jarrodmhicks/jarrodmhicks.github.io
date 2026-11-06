@@ -52,9 +52,9 @@ function need(file, obj, field, ok, hint) {
 
 const site = readJSON('data/site.json') || {};
 /* topics.json is just a list of names. They are sorted A to Z and handed the site colors in order (then it repeats). */
-const TOPIC_COLORS = [['#FF5A4A', '#C8321F'], ['#FF9F1C', '#B86A00'], ['#FFD43B', '#8A6A00'], ['#4CD07D', '#1F8A4A'], ['#4D9BFF', '#1F5FC8'], ['#B08CFF', '#6B3FD1'], ['#FF7EB6', '#C42A75']];
+const TOPIC_COLORS = ['#FF5A4A', '#FF9F1C', '#FFD43B', '#4CD07D', '#4D9BFF', '#B08CFF', '#FF7EB6'];
 const topics = (readJSON('data/topics.json') || []).map(t => typeof t === 'string' ? t : t && t.id).filter(Boolean)
-  .sort((a, b) => a.localeCompare(b)).map((id, i) => ({ id, color: TOPIC_COLORS[i % 7][0], dark: TOPIC_COLORS[i % 7][1] }));
+  .sort((a, b) => a.localeCompare(b)).map((id, i) => ({ id, color: TOPIC_COLORS[i % 7] }));
 const timeline = readJSON('data/timeline.json') || [];
 const lately = readJSON('data/lately.json') || [];
 const links = readJSON('data/links.json') || [];
@@ -428,7 +428,7 @@ function paperHTML(p) {
         <div class="cw"><div class="cwi"><div class="cite"><pre>${esc(bib)}</pre><div class="cite-actions"><button type="button" class="tag" data-copy="${esc(bib)}">copy BibTeX</button><button type="button" class="tag" data-copy="${esc(cite)}">copy citation</button></div></div></div></div>
       </article>`;
 }
-const chipRow = (g, items) => `<button type="button" class="chip all" data-g="${g}" data-v="" aria-pressed="true">all</button>` + items.map(t => `<button type="button" class="chip" data-g="${g}" data-v="${esc(t.id)}" style="--c:${t.color};--d:${t.dark || t.color}" aria-pressed="false">${esc(t.id)}</button>`).join('');
+const chipRow = (g, items) => `<button type="button" class="chip all" data-g="${g}" data-v="" aria-pressed="true">all</button>` + items.map(t => `<button type="button" class="chip" data-g="${g}" data-v="${esc(t.id)}" style="--c:${t.color}" aria-pressed="false">${esc(t.id)}</button>`).join('');
 const personKey = a => lastOf(a) + '|' + a.trim().charAt(0).toLowerCase();
 function paperStats() {
   const have = totalCites > 0, n = papers.length, cs = papers.map(p => p.citations || 0), dash = x => have ? x : '–';
@@ -536,7 +536,7 @@ const presentationsBody = `    <section>
       <div class="sbox"><input type="search" id="q" placeholder="search titles, venues, cities" aria-label="Search presentations" aria-keyshortcuts="/" autocomplete="off"><kbd aria-hidden="true">/</kbd></div>
       <p class="shint">Press <kbd>/</kbd> to search, <kbd>Esc</kbd> to clear, and <kbd>?</kbd> for more keyboard shortcuts.</p>
       <div class="filters">
-${presTopics.length ? `        <div class="frow"><span class="flab">Topics</span>${chipRow('topic', presTopics.map(id => ({ id, color: topicColor(id), dark: (topics.find(x => x.id === id) || {}).dark })))}</div>\n` : ''}        <div class="frow"><span class="flab">Format</span>${chipRow('type', PRES_TYPES.map(id => ({ id, color: PRES_COLOR[id] })))}</div>
+${presTopics.length ? `        <div class="frow"><span class="flab">Topics</span>${chipRow('topic', presTopics.map(id => ({ id, color: topicColor(id) })))}</div>\n` : ''}        <div class="frow"><span class="flab">Format</span>${chipRow('type', PRES_TYPES.map(id => ({ id, color: PRES_COLOR[id] })))}</div>
         <div class="frow"><span class="flab">Year</span><div class="dd"><button type="button" class="ddb" id="yb" aria-haspopup="listbox" aria-expanded="false"><span>all</span><span aria-hidden="true">▾</span></button><ul class="ddl" id="yl" role="listbox" hidden><li><button type="button" role="option" data-year="" aria-selected="true">all</button></li>${nUpcoming ? '<li><button type="button" role="option" data-year="upcoming" aria-selected="false">upcoming</button></li>' : ''}${presYears.map(y => `<li><button type="button" role="option" data-year="${y}" aria-selected="false">${y}</button></li>`).join('')}</ul></div></div>
       </div>
       <div class="count" id="cnt" data-unit="presentations">${talks.length} of ${talks.length} presentations</div>

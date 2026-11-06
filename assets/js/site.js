@@ -215,7 +215,7 @@
       var sbox = q.parentNode; if (sbox && sbox.classList) sbox.classList.toggle('has', !!q.value);
       var cur = $('.paper.sel', list); if (cur && !cur._vis) cur.classList.remove('sel');
       $$('.chip').forEach(function (c) { c.setAttribute('aria-pressed', String((c.getAttribute('data-v') || '') === state[c.getAttribute('data-g')])); });
-      yb.firstElementChild.textContent = state.year || 'all';
+      yb.firstElementChild.textContent = state.year || 'all'; yb.classList.toggle('on', !!state.year);
       $$('button', yl).forEach(function (b) { b.setAttribute('aria-selected', String((b.getAttribute('data-year') || '') === state.year)); });
       firstRun = false;
     };

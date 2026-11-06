@@ -18,7 +18,9 @@
   ],
   "topics": [
       "hearing",
-      "neural methods"
+      "methods",
+      "computational modeling",
+      "intracranial EEG"
     ],
   "links": {
     "video": "https://www.youtube.com/watch?v=PavZ9EBEcV8"
@@ -44,7 +46,9 @@
   ],
   "topics": [
       "hearing",
-      "neural methods"
+      "methods",
+      "computational modeling",
+      "intracranial EEG"
     ],
   "links": {
     "poster": "https://www.youtube.com/watch?v=PavZ9EBEcV8"
@@ -63,7 +67,10 @@
       "Josh H. McDermott"
     ],
     "topics": [
-      "hearing"
+      "hearing",
+      "behavior",
+      "sound texture",
+      "computational modeling"
     ],
   "links": {
   }
@@ -81,10 +88,13 @@
       "Josh H. McDermott"
     ],
     "topics": [
-      "hearing"
+      "hearing",
+      "behavior",
+      "sound texture",
+      "computational modeling"
     ],
   "links": {
-    "poster": "/assets/hicks-2025-aro-texturestreaming.pdf"
+    "poster": "/assets/presentations/hicks-2025-aro-texturestreaming.pdf"
   }
  }, 
 
@@ -101,10 +111,13 @@
       "Josh H. McDermott"
     ],
     "topics": [
-      "hearing"
+      "hearing",
+      "behavior",
+      "sound texture",
+      "computational modeling"
     ],
   "links": {
-    "poster": "/assets/hicks-2024-ccn-texturesimilarity.pdf"
+    "poster": "/assets/presentations/hicks-2024-ccn-texturesimilarity.pdf"
   }
  },
 
@@ -120,10 +133,13 @@
       "Josh H. McDermott"
     ],
     "topics": [
-      "hearing"
+      "hearing",
+      "behavior",
+      "sound texture",
+      "computational modeling"
     ],
   "links": {
-    "poster": "/assets/hicks-2024-aro-hearinginnoise.pdf"
+    "poster": "/assets/presentations/hicks-2024-aro-hearinginnoise.pdf"
   }
  },
 
@@ -139,10 +155,13 @@
       "Josh H. McDermott"
     ],
     "topics": [
-      "hearing"
+      "hearing",
+      "behavior",
+      "sound texture",
+      "computational modeling"
     ],
   "links": {
-    "poster": "/assets/hicks-2023-apan-hearinginnoise.pdf"
+    "poster": "/assets/presentations/hicks-2023-apan-hearinginnoise.pdf"
   }
  },
 
@@ -158,10 +177,13 @@
       "Josh H. McDermott"
     ],
     "topics": [
-      "hearing"
+      "hearing",
+      "behavior",
+      "sound texture",
+      "computational modeling"
     ],
   "links": {
-    "poster": "/assets/hicks-2023-aro-texturestreaming.pdf"
+    "poster": "/assets/presentations/hicks-2023-aro-texturestreaming.pdf"
   }
  },
 
@@ -177,10 +199,13 @@
       "Josh H. McDermott"
     ],
     "topics": [
-      "hearing"
+      "hearing",
+      "behavior",
+      "sound texture",
+      "computational modeling"
     ],
   "links": {
-    "poster": "/assets/hicks-2023-aro-texturestreaming.pdf"
+    "poster": "/assets/presentations/hicks-2023-aro-texturestreaming.pdf"
   }
  },
 
@@ -196,10 +221,13 @@
       "Josh H. McDermott"
     ],
     "topics": [
-      "hearing"
+      "hearing",
+      "behavior",
+      "sound texture",
+      "computational modeling"
     ],
   "links": {
-    "poster": "/assets/hicks-2022-apan-texturestreaming.pdf"
+    "poster": "/assets/presentations/hicks-2022-apan-texturestreaming.pdf"
   }
  },
 
@@ -215,10 +243,13 @@
       "Josh H. McDermott"
     ],
     "topics": [
-      "hearing"
+      "hearing",
+      "behavior",
+      "sound texture",
+      "computational modeling"
     ],
   "links": {
-    "poster": "/assets/hicks-2021-aro-outlierdetection.pdf"
+    "poster": "/assets/presentations/hicks-2021-aro-outlierdetection.pdf"
   }
  },
 
@@ -234,10 +265,13 @@
       "Josh H. McDermott"
     ],
     "topics": [
-      "hearing"
+      "hearing",
+      "behavior",
+      "sound texture",
+      "computational modeling"
     ],
   "links": {
-    "poster": "/assets/hicks-2020-aro-outlierdetection.pdf"
+    "poster": "/assets/presentations/hicks-2020-aro-outlierdetection.pdf"
   }
  },
 
@@ -255,7 +289,10 @@
       "Kristina M. Visscher"
     ],
     "topics": [
-      "aging & vision"
+      "aging",
+      "vision",
+      "behavior",
+      "fMRI"
     ],
   "links": {
   }
@@ -274,7 +311,8 @@
       "Josh H. McDermott"
     ],
     "topics": [
-      "hearing"
+      "hearing",
+      "computational modeling"
     ],
   "links": {
   }
@@ -294,7 +332,10 @@
       "Kristina M. Visscher"
     ],
     "topics": [
-      "aging & vision"
+      "aging",
+      "vision",
+      "methods",
+      "fMRI"
     ],
   "links": {
   }
@@ -315,7 +356,10 @@
       "Edward Taub"
     ],
     "topics": [
-      "stroke & rehab"
+      "stroke",
+      "rehabilitation",
+      "MRI",
+      "behavior"
     ],
   "links": {
   }
@@ -333,7 +377,10 @@
       "Josh H. McDermott"
     ],
     "topics": [
-      "hearing"
+      "hearing",
+      "behavior",
+      "sound texture",
+      "computational modeling"
     ],
   "links": {
   }
@@ -351,7 +398,10 @@
       "Josh H. McDermott"
     ],
     "topics": [
-      "hearing"
+      "hearing",
+      "behavior",
+      "sound texture",
+      "computational modeling"
     ],
   "links": {
   }
@@ -368,14 +418,14 @@
       "Jarrod M. Hicks"
     ],
     "topics": [
-      "hearing"
+      "methods"
     ],
   "links": {
   }
  },
 
  {
-  "title": "Perceiving the World Around Us'",
+  "title": "Perceiving the World Around Us",
   "type": "talk",
   "venue": "Decoding the Brain Event at the Cambridge Science Festival",
   "city": "Cambridge, MA",
@@ -385,14 +435,15 @@
       "Jarrod M. Hicks"
     ],
     "topics": [
-      "hearing"
+      "perception",
+      "illusions"
     ],
   "links": {
   }
  },
 
  {
-  "title": "Perceiving the World Around Us'",
+  "title": "Perceiving the World Around Us",
   "type": "talk",
   "venue": "Taste of Science Boston",
   "city": "Boston, MA",
@@ -402,7 +453,8 @@
       "Jarrod M. Hicks"
     ],
     "topics": [
-      "hearing"
+      "perception",
+      "illusions"
     ],
   "links": {
   }
