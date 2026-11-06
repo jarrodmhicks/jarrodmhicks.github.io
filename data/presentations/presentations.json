@@ -2,8 +2,8 @@
  {
   "title": "Invariant correlation: a general and straightforward method to quantify invariance in time-varying neural signals",
   "type": "talk",
-  "venue": "Computational Cognitive Neuroscience",
-  "city": "New York, New York",
+  "venue": "Cognitive Computational Neuroscience (CCN)",
+  "city": "New York, NY",
   "date": "2026-08",
   "conference": true,
   "authors": [
@@ -28,8 +28,8 @@
  {
   "title": "Invariant correlation: a general and straightforward method to quantify invariance in time-varying neural signals",
   "type": "poster",
-  "venue": "Computational Cognitive Neuroscience (CCN)",
-  "city": "New York, New York",
+  "venue": "Cognitive Computational Neuroscience (CCN)",
+  "city": "New York, NY",
   "date": "2026-08",
   "conference": true,
   "authors": [
@@ -47,7 +47,7 @@
       "neural methods"
     ],
   "links": {
-    "pdf": "https://www.youtube.com/watch?v=PavZ9EBEcV8"
+    "poster": "https://www.youtube.com/watch?v=PavZ9EBEcV8"
   }
  },
 
@@ -84,7 +84,7 @@
       "hearing"
     ],
   "links": {
-    "pdf": "/assets/hicks-2025-aro-texturestreaming.pdf"
+    "poster": "/assets/hicks-2025-aro-texturestreaming.poster"
   }
  }, 
 
@@ -104,7 +104,7 @@
       "hearing"
     ],
   "links": {
-    "pdf": "/assets/hicks-2024-ccn-texturesimilarity.pdf"
+    "poster": "/assets/hicks-2024-ccn-texturesimilarity.poster"
   }
  },
 
@@ -123,7 +123,7 @@
       "hearing"
     ],
   "links": {
-    "pdf": "/assets/hicks-2024-aro-hearinginnoise.pdf"
+    "poster": "/assets/hicks-2024-aro-hearinginnoise.poster"
   }
  },
 
@@ -142,7 +142,7 @@
       "hearing"
     ],
   "links": {
-    "pdf": "/assets/hicks-2023-apan-hearinginnoise.pdf"
+    "poster": "/assets/hicks-2023-apan-hearinginnoise.poster"
   }
  },
 
@@ -161,7 +161,7 @@
       "hearing"
     ],
   "links": {
-    "pdf": "/assets/hicks-2023-aro-texturestreaming.pdf"
+    "poster": "/assets/hicks-2023-aro-texturestreaming.poster"
   }
  },
 
@@ -180,7 +180,7 @@
       "hearing"
     ],
   "links": {
-    "pdf": "/assets/hicks-2023-aro-texturestreaming.pdf"
+    "poster": "/assets/hicks-2023-aro-texturestreaming.poster"
   }
  },
 
@@ -199,7 +199,7 @@
       "hearing"
     ],
   "links": {
-    "pdf": "/assets/hicks-2022-apan-texturestreaming.pdf"
+    "poster": "/assets/hicks-2022-apan-texturestreaming.poster"
   }
  },
 
@@ -218,7 +218,7 @@
       "hearing"
     ],
   "links": {
-    "pdf": "/assets/hicks-2021-aro-outlierdetection.pdf"
+    "poster": "/assets/hicks-2021-aro-outlierdetection.poster"
   }
  },
 
@@ -237,7 +237,7 @@
       "hearing"
     ],
   "links": {
-    "pdf": "/assets/hicks-2020-aro-outlierdetection.pdf"
+    "poster": "/assets/hicks-2020-aro-outlierdetection.poster"
   }
  },
 
