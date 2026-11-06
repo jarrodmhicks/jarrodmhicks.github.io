@@ -51,7 +51,10 @@ function need(file, obj, field, ok, hint) {
 }
 
 const site = readJSON('data/site.json') || {};
-const topics = readJSON('data/topics.json') || [];
+/* topics.json is just a list of names. They are sorted A to Z and handed the site colors in order (then it repeats). */
+const TOPIC_COLORS = [['#FF5A4A', '#C8321F'], ['#FF9F1C', '#B86A00'], ['#FFD43B', '#8A6A00'], ['#4CD07D', '#1F8A4A'], ['#4D9BFF', '#1F5FC8'], ['#B08CFF', '#6B3FD1'], ['#FF7EB6', '#C42A75']];
+const topics = (readJSON('data/topics.json') || []).map(t => typeof t === 'string' ? t : t && t.id).filter(Boolean)
+  .sort((a, b) => a.localeCompare(b)).map((id, i) => ({ id, color: TOPIC_COLORS[i % 7][0], dark: TOPIC_COLORS[i % 7][1] }));
 const timeline = readJSON('data/timeline.json') || [];
 const lately = readJSON('data/lately.json') || [];
 const links = readJSON('data/links.json') || [];
@@ -220,7 +223,7 @@ const statBadge = (n, label, i) => `<div class="stat" style="--c:${RAINBOW[i % R
    Presentations can use: talks, posters, conferences, cities, countries, upcoming, days to next, days since, on video, with slides, demos, venues,
      topics, first author, co-presenters, years active, per year, best year */
 const PAPER_STATS = ['papers', 'h-index', 'citations', 'most cited', 'co-authors', 'journals', 'first author'];
-const PRES_STATS = ['talks', 'posters', 'upcoming', 'conferences', 'cities', 'on video', 'days since'];
+const PRES_STATS = ['total', 'upcoming', 'talks', 'posters', 'conferences', 'cities', 'days since'];
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const head = (title, lede, extra) => `<div class="phead">${extra ? `<div class="phrow"><h1><span>${esc(title)}</span></h1><div class="phstats">${extra}</div></div>` : `<h1><span>${esc(title)}</span></h1>`}${lede ? `<p>${rich(lede)}</p>` : ''}</div>`;
@@ -411,7 +414,7 @@ function paperHTML(p) {
   const l = p.links || {};
   const ext = u => `href="${esc(u)}" target="_blank" rel="noopener"`;
   /* one quiet line: doi, then whatever links exist */
-  const quiet = [l.doi && `<span>doi: <a data-k="doi" ${ext('https://doi.org/' + l.doi)}>${esc(l.doi)}</a></span>`, l.pdf && `<a data-k="pdf" href="${esc(l.pdf)}">PDF</a>`, l.code && `<a data-k="code" ${ext(l.code)}>code</a>`, l.data && `<a data-k="data" ${ext(l.data)}>data</a>`].filter(Boolean).join('<i>·</i>');
+  const quiet = [l.doi && `<span>doi: <a data-k="doi" ${ext('https://doi.org/' + l.doi)}>${esc(l.doi)}</a></span>`, l.pdf && `<a data-k="pdf" ${ext(l.pdf)}>PDF</a>`, l.code && `<a data-k="code" ${ext(l.code)}>code</a>`, l.data && `<a data-k="data" ${ext(l.data)}>data</a>`].filter(Boolean).join('<i>·</i>');
   const tagsHTML = p.topics.map(t => `<span class="tag t" style="--c:${topicColor(t)}">${esc(t)}</span>`).join('');
   const badge = p.citations > 0 ? `<div class="cbadge" title="${p.citations} citations"><b>${p.citations}</b><span>cited</span></div>`
     : isNewPaper(p) ? `<div class="cbadge fmt new" title="recent paper, no citations yet">new</div>` : '';
@@ -420,7 +423,7 @@ function paperHTML(p) {
   return `      <article class="paper${badge ? ' hc' : ''}" data-cites="${p.citations || 0}" style="--tc:${topicColor(p.topics[0])}" data-year="${p.year}" data-topics="${esc(p.topics.join('|'))}" data-text="${esc(text)}">
         ${badge}<span class="yrm">${p.year}</span>
         <h3>${esc(p.title)}</h3>
-        <p class="meta">${authorsHTML(p)}<br>${esc(p.venue)}${vol ? ', ' + esc(vol) : ''}</p>${quiet ? `\n        <p class="ql">${quiet}</p>` : ''}
+        <p class="meta"><span class="au">${authorsHTML(p)}</span><span class="vb"><span class="ven">${esc(p.venue)}</span>${vol ? `<span class="loc">${esc(vol)}</span>` : ''}</span></p>${quiet ? `\n        <p class="ql">${quiet}</p>` : ''}
         <div class="pb"><div class="pl">${tagsHTML}</div><button type="button" class="tag cite-btn" aria-expanded="false">cite</button></div>
         <div class="cw"><div class="cwi"><div class="cite"><pre>${esc(bib)}</pre><div class="cite-actions"><button type="button" class="tag" data-copy="${esc(bib)}">copy BibTeX</button><button type="button" class="tag" data-copy="${esc(cite)}">copy citation</button></div></div></div></div>
       </article>`;
@@ -484,7 +487,7 @@ function presHTML(t) {
           <div class="cbadge fmt" style="--bcol:${PRES_COLOR[t.type]}" title="${esc(t.type)}">${esc(t.type)}</div>
           <span class="yrm">${MON[+m - 1]} ${y}</span>
           <h3>${esc(t.title)}</h3>
-          <p class="meta">${authors.map(a => isMe(a) ? `<b>${esc(a)}</b>` : esc(a)).join(', ')}<br>${esc(t.venue)}${t.city ? '<br>' + esc(t.city) : ''}</p>${quiet ? `\n          <p class="ql">${quiet}</p>` : ''}${tagsHTML ? `\n          <div class="pl">${tagsHTML}</div>` : ''}
+          <p class="meta"><span class="au">${authors.map(a => isMe(a) ? `<b>${esc(a)}</b>` : esc(a)).join(', ')}</span><span class="vb"><span class="ven">${esc(t.venue)}</span>${t.city ? `<span class="loc">${esc(t.city)}</span>` : ''}</span></p>${quiet ? `\n          <p class="ql">${quiet}</p>` : ''}${tagsHTML ? `\n          <div class="pl">${tagsHTML}</div>` : ''}
         </article>`;
 }
 /* the stats count only what has already happened */
@@ -516,7 +519,7 @@ function presStats() {
   const perYear = {}; yrs.forEach(y => { perYear[y] = (perYear[y] || 0) + 1; });
   const bestYear = n ? Object.keys(perYear).sort((a, b) => perYear[b] - perYear[a] || b - a)[0] : null;
   const v = {
-    talks: nTalks, posters: nPosters, conferences: nConfs, cities: cityCount || '–',
+    total: talks.length, talks: nTalks, posters: nPosters, conferences: nConfs, cities: cityCount || '–',
     countries: uniq(given.map(t => t.country && t.country.trim().toLowerCase())) || null,
     upcoming: nUpcoming, 'days to next': daysToNext, 'days since': lastGiven,
     'on video': hasL('video'), 'with slides': hasL('slides') || null, demos: hasL('demo') || null,

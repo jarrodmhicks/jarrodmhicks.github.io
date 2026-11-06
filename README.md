@@ -63,7 +63,7 @@ This creates `data/papers/hicks-2027-short-title.json`. Open it and fill it in:
 ```
 
 - `authors`: your name must be written exactly as `J. M. Hicks` for it to show in bold.
-- `topics` must come from `data/topics.json` (hearing, neural methods, stroke & rehab, aging & vision). To add a topic, add it there with a color.
+- `topics` must come from `data/topics.json` (a plain list of names). To add a topic, add its name there. Topics are sorted A to Z and given the site colors in order, then the colors repeat.
 - `doi` is just the DOI, without `https://doi.org/`.
 - `citations` is optional. When it is a number, a "cited by" tag appears. Copy it from Google Scholar when you update, since Scholar has no public data feed.
 - Empty links are left off the page.
@@ -100,7 +100,7 @@ The twelve presentations that came with this site are made-up placeholders (`"pl
 | `lately.json` | The Lately page. One entry per colored label (one word, 7 at most). `items` is a list of texts, **newest first**: the first one is shown, and the arrows page back through the rest. To add something new, put it at the top of that label's list. No dates anywhere. The footer shows "Last updated", set automatically from your newest commit that touched `data/` |
 | `links.json` | The Contact stickers after Email, in rainbow order. `icon` is `youtube`, `instagram`, `tiktok`, `bluesky`, `threads`, `x`, `github` or `scholar`. A sticker with an empty `url` is left off, unless it has `"soon": true`, which shows it tinted, dashed and badged "soon". When a profile is ready, fill in its `url` and delete `"soon": true` |
 | `consulting.json` | The Consulting cards, in order (sticker colors follow the rainbow by position). `label` is the word on the sticker, `icon` is `check`, `explain`, `teach`, `demo`, `test`, `guest` or `sources`, `title` is the question, `text` the answer, and `example` the small line underneath (optional) |
-| `topics.json` | Paper topics and their colors |
+| `topics.json` | The allowed topic names (colors are assigned automatically) |
 
 **To do:** `links.json` needs your YouTube and Instagram URLs. They are blank on purpose, so they do not show yet; TikTok, Bluesky, Threads and X are marked `"soon"`. The three `[bracketed]` lines on the Lately page (listening to, reading, brewing) are placeholders too.
 

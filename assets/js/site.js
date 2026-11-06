@@ -242,13 +242,18 @@
     }
     var cards = function () { return $$('.paper', list || document).filter(function (p) { return !p.hidden && p._vis !== false; }); };
     var selected = function () { return $('.paper.sel', list || document); };
-    var select = function (c) {
+    var select = function (c, byClick) {
       var cur = selected(); if (cur) cur.classList.remove('sel');
-      if (document.activeElement && document.activeElement.blur && list && list.contains(document.activeElement)) document.activeElement.blur();
+      if (!byClick && document.activeElement && document.activeElement.blur && list && list.contains(document.activeElement)) document.activeElement.blur();
       if (!c) return;
       c.classList.add('sel');
-      c.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+      if (!byClick) c.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
     };
+    /* clicking a card selects it, the same as stepping to it with the keys (no scrolling, since you are already looking at it) */
+    if (list) list.addEventListener('click', function (e) {
+      var c = e.target.closest && e.target.closest('.paper');
+      if (c && c !== selected()) select(c, true);
+    });
     var move = function (d) {
       var all = cards(); if (!all.length) return;
       var cur = selected(), i = cur ? all.indexOf(cur) : -1;
