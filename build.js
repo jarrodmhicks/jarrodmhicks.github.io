@@ -53,14 +53,12 @@ function need(file, obj, field, ok, hint) {
 const site = readJSON('data/site.json') || {};
 /* topics.json is just a list of names. They are sorted A to Z and handed the site colors in order (then it repeats). */
 const TOPIC_COLORS = ['#FF5A4A', '#FF9F1C', '#FFD43B', '#4CD07D', '#4D9BFF', '#B08CFF', '#FF7EB6'];
-const topics = (readJSON('data/topics.json') || []).map(t => typeof t === 'string' ? t : t && t.id).filter(Boolean)
-  .sort((a, b) => a.localeCompare(b)).map((id, i) => ({ id, color: TOPIC_COLORS[i % 7] }));
+const topicIds = (readJSON('data/topics.json') || []).map(t => typeof t === 'string' ? t : t && t.id).filter(Boolean).sort((a, b) => a.localeCompare(b));
 const timeline = readJSON('data/timeline.json') || [];
 const lately = readJSON('data/lately.json') || [];
 const links = readJSON('data/links.json') || [];
 const consulting = readJSON('data/consulting.json') || { cards: [] };
 const LEDES = site.ledes || {}; /* the short line under each page title; a missing or empty one just leaves no line */
-const topicIds = topics.map(t => t.id);
 
 const PRES_TYPES = ['talk', 'poster'];
 const PRES_COLOR = { talk: '#FF5A4A', poster: '#FF9F1C' }; /* same as the first two stickers (talks, posters) at the top of Presentations */
@@ -395,6 +393,11 @@ function citation(p) {
 }
 
 /* ---------- papers ---------- */
+/* only topics that some paper or presentation really uses are shown, each page with its own list. Colors go to the used
+   topics in A-Z order, so the same topic has the same color on every page. */
+const paperTopicSet = new Set(papers.flatMap(p => p.topics)), presTopicSet = new Set(talks.flatMap(t => t.topics || []));
+const topics = topicIds.filter(id => paperTopicSet.has(id) || presTopicSet.has(id)).map((id, i) => ({ id, color: TOPIC_COLORS[i % 7] }));
+const byName = (a, c) => a.localeCompare(c);
 const topicColor = id => (topics.find(t => t.id === id) || { color: '#cccccc' }).color;
 const years = [...new Set(papers.map(p => p.year))].sort((a, b) => b - a);
 const lastOf = a => a.trim().split(/\s+/).pop().toLowerCase();
@@ -415,12 +418,12 @@ function paperHTML(p) {
   const ext = u => `href="${esc(u)}" target="_blank" rel="noopener"`;
   /* one quiet line: doi, then whatever links exist */
   const quiet = [l.doi && `<span>doi: <a data-k="doi" ${ext('https://doi.org/' + l.doi)}>${esc(l.doi)}</a></span>`, l.pdf && `<a data-k="pdf" ${ext(l.pdf)}>PDF</a>`, l.code && `<a data-k="code" ${ext(l.code)}>code</a>`, l.data && `<a data-k="data" ${ext(l.data)}>data</a>`].filter(Boolean).join('<i>·</i>');
-  const tagsHTML = p.topics.map(t => `<span class="tag t" style="--c:${topicColor(t)}">${esc(t)}</span>`).join('');
+  const tagsHTML = [...p.topics].sort(byName).map(t => `<span class="tag t" style="--c:${topicColor(t)}">${esc(t)}</span>`).join('');
   const badge = p.citations > 0 ? `<div class="cbadge" title="${p.citations} citations"><b>${p.citations}</b><span>cited</span></div>`
     : isNewPaper(p) ? `<div class="cbadge fmt new" title="recent paper, no citations yet">new</div>` : '';
   const text = [p.title, p.authors.join(' '), p.venue, p.year].join(' ').toLowerCase();
   const bib = bibtex(p), cite = citation(p);
-  return `      <article class="paper${badge ? ' hc' : ''}" data-cites="${p.citations || 0}" style="--tc:${topicColor(p.topics[0])}" data-year="${p.year}" data-topics="${esc(p.topics.join('|'))}" data-text="${esc(text)}">
+  return `      <article class="paper${badge ? ' hc' : ''}" data-cites="${p.citations || 0}" style="--tc:${topicColor([...p.topics].sort(byName)[0])}" data-year="${p.year}" data-topics="${esc(p.topics.join('|'))}" data-text="${esc(text)}">
         ${badge}<span class="yrm">${p.year}</span>
         <h3>${esc(p.title)}</h3>
         <p class="meta"><span class="au">${authorsHTML(p)}</span><span class="vb"><span class="ven">${esc(p.venue)}</span>${vol ? `<span class="loc">${esc(vol)}</span>` : ''}</span></p>${quiet ? `\n        <p class="ql">${quiet}</p>` : ''}
@@ -465,7 +468,7 @@ const papersBody = `    <section>
       <div class="sbox"><input type="search" id="q" placeholder="search titles, authors, venues" aria-label="Search papers" aria-keyshortcuts="/" autocomplete="off"><kbd aria-hidden="true">/</kbd></div>
       <p class="shint">Press <kbd>/</kbd> to search, <kbd>Esc</kbd> to clear, and <kbd>?</kbd> for more keyboard shortcuts.</p>
       <div class="filters">
-        <div class="frow"><span class="flab">Topics</span>${chipRow('topic', topics)}</div>
+        <div class="frow"><span class="flab">Topics</span>${chipRow('topic', topics.filter(t => paperTopicSet.has(t.id)))}</div>
         <div class="frow"><span class="flab">Year</span><div class="dd"><button type="button" class="ddb" id="yb" aria-haspopup="listbox" aria-expanded="false"><span>all</span><span aria-hidden="true">▾</span></button><ul class="ddl" id="yl" role="listbox" hidden><li><button type="button" role="option" data-year="" aria-selected="true">all</button></li>${years.map(y => `<li><button type="button" role="option" data-year="${y}" aria-selected="false">${y}</button></li>`).join('')}</ul></div></div>
         ${totalCites ? `<div class="frow"><span class="flab">Sort</span><button type="button" class="chip all" data-g="sort" data-v="year" aria-pressed="true">most recent</button><button type="button" class="chip all" data-g="sort" data-v="cites" aria-pressed="false">most cited</button></div>` : ''}
       </div>
@@ -479,7 +482,7 @@ ${papers.map(paperHTML).join('\n')}
 /* ---------- presentations ---------- */
 function presHTML(t) {
   const [y, m] = t.date.split('-');
-  const l = t.links || {}, up = isUpcoming(t), authors = t.authors && t.authors.length ? t.authors : [site.me], tps = t.topics || [];
+  const l = t.links || {}, up = isUpcoming(t), authors = t.authors && t.authors.length ? t.authors : [site.me], tps = [...(t.topics || [])].sort(byName);
   const quiet = LINK_KEYS.filter(k => l[k]).map(k => `<a data-k="${k}" href="${esc(l[k])}" target="_blank" rel="noopener">${LINK_LABEL[k] || k}</a>`).join('<i>·</i>');
   const tagsHTML = tps.map(x => `<span class="tag t" style="--c:${topicColor(x)}">${esc(x)}</span>`).join('');
   const text = [t.title, authors.join(' '), t.venue, t.city, t.type, y, tps.join(' ')].filter(Boolean).join(' ').toLowerCase();
@@ -505,7 +508,7 @@ const presGroups = [
     return `      <section class="ygrp" data-year="${y}"><h2><span>${y}</span><i>${items.length}</i></h2><div>\n${items.map(presHTML).join('\n')}\n      </div></section>`;
   })
 ].join('\n');
-const presTopics = topicIds.filter(id => talks.some(t => (t.topics || []).includes(id)));
+const presTopics = topics.map(t => t.id).filter(id => presTopicSet.has(id));
 const nUpcoming = talks.filter(isUpcoming).length;
 function presStats() {
   const uniq = a => new Set(a.filter(Boolean)).size, n = given.length;

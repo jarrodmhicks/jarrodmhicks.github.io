@@ -158,7 +158,7 @@
   var list = $('#plist') || $('#tlist');
   if (list) {
     var papers = $$('.paper', list), groups = $$('.ygrp', list);
-    var state = { q: '', topic: '', type: '', year: '', sort: 'year' };
+    var state = { q: '', topic: [], type: '', year: '', sort: 'year' }; /* topic is a list: a card has to carry every topic you picked */
     var order = papers.slice();
     var q = $('#q'), count = $('#cnt'), none = $('#none');
     var yb = $('#yb'), yl = $('#yl');
@@ -187,7 +187,8 @@
     var apply = function () {
       var shown = 0, terms = state.q.toLowerCase().split(/\s+/).filter(Boolean), fancy = !firstRun && !reduce && !!document.body.animate;
       papers.forEach(function (p) {
-        var ok = (!state.topic || (p.getAttribute('data-topics') || '').split('|').indexOf(state.topic) > -1) &&
+        var have = (p.getAttribute('data-topics') || '').split('|');
+        var ok = state.topic.every(function (t) { return have.indexOf(t) > -1; }) &&
                  (!state.type || p.getAttribute('data-type') === state.type) &&
                  (!state.year || (state.year === 'upcoming' ? p.getAttribute('data-upcoming') === '1' : p.getAttribute('data-year') === state.year)) &&
                  terms.every(function (t) { return p.getAttribute('data-text').indexOf(t) > -1; });
@@ -214,13 +215,19 @@
       none.hidden = shown !== 0;
       var sbox = q.parentNode; if (sbox && sbox.classList) sbox.classList.toggle('has', !!q.value);
       var cur = $('.paper.sel', list); if (cur && !cur._vis) cur.classList.remove('sel');
-      $$('.chip').forEach(function (c) { c.setAttribute('aria-pressed', String((c.getAttribute('data-v') || '') === state[c.getAttribute('data-g')])); });
+      $$('.chip').forEach(function (c) { var g = c.getAttribute('data-g'), v = c.getAttribute('data-v') || ''; c.setAttribute('aria-pressed', String(g === 'topic' ? (v ? state.topic.indexOf(v) > -1 : !state.topic.length) : v === state[g])); });
       yb.firstElementChild.textContent = state.year || 'all'; yb.classList.toggle('on', !!state.year);
       $$('button', yl).forEach(function (b) { b.setAttribute('aria-selected', String((b.getAttribute('data-year') || '') === state.year)); });
       firstRun = false;
     };
     q.addEventListener('input', function () { state.q = q.value; apply(); });
-    $$('.chip').forEach(function (c) { c.addEventListener('click', function () { state[c.getAttribute('data-g')] = c.getAttribute('data-v') || ''; apply(); }); });
+    $$('.chip').forEach(function (c) { c.addEventListener('click', function () {
+      var g = c.getAttribute('data-g'), v = c.getAttribute('data-v') || '';
+      if (g === 'topic') { /* topics add up; "all" clears them; unpicking the last one goes back to all */
+        if (!v) state.topic = []; else { var i = state.topic.indexOf(v); if (i > -1) state.topic.splice(i, 1); else state.topic.push(v); }
+      } else state[g] = v;
+      apply();
+    }); });
     yb.addEventListener('click', function (e) { e.stopPropagation(); yl.hidden = !yl.hidden; yb.setAttribute('aria-expanded', String(!yl.hidden)); });
     $$('button', yl).forEach(function (b) { b.addEventListener('click', function () { state.year = b.getAttribute('data-year') || ''; yl.hidden = true; yb.setAttribute('aria-expanded', 'false'); apply(); }); });
     document.addEventListener('click', function () { yl.hidden = true; yb.setAttribute('aria-expanded', 'false'); });

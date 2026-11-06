@@ -92,8 +92,9 @@ p{max-width:66ch}
 
 /* papers */
 .filters{display:grid;gap:10px;margin:14px 0 8px}
-.frow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.flab{font:500 11px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--mute);width:56px}
+.frow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-left:64px}
+/* the label hangs out to the left, so a second line of chips lines up under the first chip ("all") */
+.flab{font:500 11px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--mute);width:56px;margin-left:-64px}
 .chip{font:500 12px var(--f-mono);color:var(--ink);background:var(--bg);border:1.5px solid var(--ink);border-radius:999px;padding:3px 12px;cursor:pointer;transition:opacity .15s,transform .1s,box-shadow .1s}
 .chip:hover{background:var(--soft)}
 .chip.all[aria-pressed=true]{background:var(--ink);color:var(--bg)}

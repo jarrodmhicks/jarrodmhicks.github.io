@@ -63,7 +63,7 @@ This creates `data/papers/hicks-2027-short-title.json`. Open it and fill it in:
 ```
 
 - `authors`: your name must be written exactly as `J. M. Hicks` for it to show in bold.
-- `topics` must come from `data/topics.json` (a plain list of names). To add a topic, add its name there. Topics are sorted A to Z and given the site colors in order, then the colors repeat.
+- `topics` must come from `data/topics.json` (a plain list of names). To add a topic, add its name there. Only topics that a paper or presentation really uses show up as filters (each page lists its own). They are sorted A to Z and given the site colors in order, then the colors repeat. Picking several filters shows only items that have all of them.
 - `doi` is just the DOI, without `https://doi.org/`.
 - `citations` is optional. When it is a number, a "cited by" tag appears. Copy it from Google Scholar when you update, since Scholar has no public data feed.
 - Empty links are left off the page.
