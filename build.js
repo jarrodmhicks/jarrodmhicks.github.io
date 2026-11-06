@@ -56,6 +56,7 @@ const timeline = readJSON('data/timeline.json') || [];
 const lately = readJSON('data/lately.json') || [];
 const links = readJSON('data/links.json') || [];
 const consulting = readJSON('data/consulting.json') || { cards: [] };
+const LEDES = site.ledes || {}; /* the short line under each page title; a missing or empty one just leaves no line */
 const topicIds = topics.map(t => t.id);
 
 const PRES_TYPES = ['talk', 'poster'];
@@ -192,7 +193,7 @@ lately.forEach((c, i) => {
 });
 if (lately.length > 7) warnings.push('data/lately.json has more than 7 labels, so colors will repeat');
 lately.forEach(c => (c.items || []).forEach(t => { if (/^\[/.test(t) && !/\]\(/.test(t)) placeholders.push(`data/lately.json: "${c.label}" still has a [bracketed] placeholder`); }));
-links.forEach(l => { if (!l.url) warnings.push(`data/links.json: "${l.name}" has no url yet, so it is left off the Contact page`); });
+links.forEach(l => { if (!l.url && !l.soon) warnings.push(`data/links.json: "${l.name}" has no url yet, so it is left off the Contact page (add "soon": true to show it greyed out as "soon")`); });
 
 /* ---------- shared pieces ---------- */
 const ALL_TABS = [
@@ -233,19 +234,30 @@ const analyticsTag = LOCAL ? '' :
   (an.goatcounter ? `\n<script data-goatcounter="https://${an.goatcounter}.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>` : '') +
   (an.cloudflare ? `\n<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "${esc(an.cloudflare)}"}'></script>` : '');
 
+/* one drawn arrow, rotated, so left/right/up/down are exactly the same size */
+const AR = dir => `<svg class="ar ${dir}" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6h8M6.5 2.5 10 6l-3.5 3.5"/></svg>`;
+const K = (...keys) => keys.map(k => ({ l: AR('l'), r: AR('r'), u: AR('u'), d: AR('d') }[k] ? `<kbd>${{ l: AR('l'), r: AR('r'), u: AR('u'), d: AR('d') }[k]}</kbd>` : `<kbd>${k}</kbd>`)).join(' <span class="or">or</span> ');
 const keysDialog = `<dialog id="keys" aria-labelledby="keys-t">
   <h2 id="keys-t">Keyboard shortcuts</h2>
   <dl>
-    <div><dt><kbd>1</kbd> to <kbd>${TABS.length}</kbd></dt><dd>jump to a page: ${TABS.map((t, i) => `<b style="--c:${t.color}">${i + 1}</b> ${t.label}`).join(' &middot; ')}</dd></div>
-    <div><dt><kbd>/</kbd></dt><dd>search papers (from any page; on Presentations it searches talks). Several words must all match.</dd></div>
+    <div><dt><kbd>1</kbd> to <kbd>${TABS.length}</kbd></dt><dd>jump to a page<div class="pgs">${TABS.map((t, i) => `<span class="pk" style="--c:${t.color}"><b>${i + 1}</b>${t.label}</span>`).join('')}</div></dd></div>
+    <div><dt><kbd>/</kbd></dt><dd>search papers (from any page; on Presentations it searches talks). Several words must all match. Then press <kbd>Enter</kbd> to select the top result</dd></div>
     <div><dt><kbd>Esc</kbd></dt><dd>clear the search, close a menu or this box</dd></div>
     <div><dt><kbd>?</kbd></dt><dd>open this box</dd></div>
   </dl>
   <h3>On Papers and Presentations</h3>
   <dl>
-    <div><dt><kbd>j</kbd> <kbd>k</kbd></dt><dd>next and previous card</dd></div>
+    <div><dt><kbd>Enter</kbd></dt><dd>after searching: select the top result, so the keys below work right away</dd></div>
+    <div><dt>${K('n', 'd')}</dt><dd>next card</dd></div>
+    <div><dt>${K('b', 'u')}</dt><dd>previous card</dd></div>
+    <div><dt>${K('l', 'r')}</dt><dd>move along the card's links (DOI, PDF, slides, video). <kbd>Enter</kbd> opens the highlighted one</dd></div>
     <div><dt><kbd>c</kbd></dt><dd>open or close the BibTeX box on the selected paper</dd></div>
-    <div><dt><kbd>s</kbd></dt><dd>switch Papers between most recent and most cited</dd></div>
+    <div><dt><kbd>v</kbd></dt><dd>view the selected card: a paper's PDF (or its DOI if there is no PDF), a talk's slides (or its video)</dd></div>
+  </dl>
+  <h3>On Lately</h3>
+  <dl>
+    <div><dt>${K('u', 'd')}</dt><dd>choose a row</dd></div>
+    <div><dt>${K('l', 'r')}</dt><dd>go back in time, or forward again, on the chosen row</dd></div>
   </dl>
   <p class="kfoot">There is one more, but you will have to find it. Hint: it is a classic.</p>
   <button type="button" class="btn" id="kclose">close</button>
@@ -308,7 +320,7 @@ ${keysDialog}
 /* ---------- home: badge on a lanyard ---------- */
 const LANYARD = `<svg viewBox="0 0 200 100" aria-hidden="true"><defs><path id="la" d="M31 0L96 66"/><path id="lb" d="M104 66L169 0"/></defs><polygon points="180,0 154,0 90,70 110,70" fill="#15181F"/><polygon points="20,0 46,0 110,70 90,70" fill="#15181F"/><g font-family="JetBrains Mono,monospace" font-size="7.6" fill="#fff" letter-spacing=".6"><text dy="2.7"><textPath href="#la" startOffset="9">psychophyshicks</textPath></text><text dy="2.7"><textPath href="#lb" startOffset="9">psychophyshicks</textPath></text></g><rect x="91" y="66" width="18" height="30" rx="4" fill="#15181F"/><rect x="88" y="74" width="24" height="8" rx="2.5" fill="#C9CED8" stroke="#121826" stroke-width="3"/><path d="M96 84v10M104 84v10" stroke="#fff" stroke-width="1.5" stroke-dasharray="2 3" opacity=".7"/></svg>`;
 
-const EMAIL_ENC = Buffer.from(site.email).toString('base64'); // the address is never written into the page as plain text
+const EMAIL_ENC = Buffer.from(site.email).toString('base64'); // the address is never written into the page as plain text (a script decodes it when you click the Email sticker)
 
 const homeBody = `    <section>
       <div class="hero">
@@ -324,16 +336,17 @@ const homeBody = `    <section>
     </section>`;
 
 /* ---------- about ---------- */
+/* the sticker on each Path entry shows the end year: "2017 – 2025" gives 2025, and "2025 – now" gives now */
+const endLabel = when => { const parts = String(when).split(/\s*[–—-]\s*/).filter(Boolean); const last = parts[parts.length - 1] || ''; return /^\d{4}$/.test(last) ? last : 'now'; };
 const aboutBody = `    <section>
       <div class="abt">
         <div>
-          ${head('About', site.ledes.about)}
+          ${head('About', LEDES.about)}
 ${site.about.map(p => `          <p>${rich(p)}</p>`).join('\n')}
         </div>
         <div>
-          <h4>Path</h4>
           <ol class="tl">
-${timeline.map((t, i) => `            <li style="--c:${RAINBOW[i % RAINBOW.length]}"><span class="when">${esc(t.when)}</span><b>${esc(t.title)}</b><span class="w">${esc(t.where)}</span></li>`).join('\n')}
+${timeline.map((t, i) => `            <li style="--c:${RAINBOW[i % RAINBOW.length]}"><span class="dt">${esc(endLabel(t.when))}</span><div><b>${esc(t.title)}</b><span class="w">${esc(t.where)}</span><span class="rng">${esc(t.when)}</span></div></li>`).join('\n')}
           </ol>
         </div>
       </div>
@@ -398,7 +411,7 @@ function paperHTML(p) {
   const l = p.links || {};
   const ext = u => `href="${esc(u)}" target="_blank" rel="noopener"`;
   /* one quiet line: doi, then whatever links exist */
-  const quiet = [l.doi && `<span>doi: <a ${ext('https://doi.org/' + l.doi)}>${esc(l.doi)}</a></span>`, l.pdf && `<a href="${esc(l.pdf)}">PDF</a>`, l.code && `<a ${ext(l.code)}>code</a>`, l.data && `<a ${ext(l.data)}>data</a>`].filter(Boolean).join('<i>·</i>');
+  const quiet = [l.doi && `<span>doi: <a data-k="doi" ${ext('https://doi.org/' + l.doi)}>${esc(l.doi)}</a></span>`, l.pdf && `<a data-k="pdf" href="${esc(l.pdf)}">PDF</a>`, l.code && `<a data-k="code" ${ext(l.code)}>code</a>`, l.data && `<a data-k="data" ${ext(l.data)}>data</a>`].filter(Boolean).join('<i>·</i>');
   const tagsHTML = p.topics.map(t => `<span class="tag t" style="--c:${topicColor(t)}">${esc(t)}</span>`).join('');
   const badge = p.citations > 0 ? `<div class="cbadge" title="${p.citations} citations"><b>${p.citations}</b><span>cited</span></div>`
     : isNewPaper(p) ? `<div class="cbadge fmt new" title="recent paper, no citations yet">new</div>` : '';
@@ -445,9 +458,9 @@ function paperStats() {
   return PAPER_STATS.filter(k => v[k] !== null && v[k] !== undefined).map((k, i) => statBadge(v[k], k, i)).join('');
 }
 const papersBody = `    <section>
-      ${head('Papers', site.ledes.papers, paperStats())}
+      ${head('Papers', LEDES.papers, paperStats())}
       <div class="sbox"><input type="search" id="q" placeholder="search titles, authors, venues" aria-label="Search papers" aria-keyshortcuts="/" autocomplete="off"><kbd aria-hidden="true">/</kbd></div>
-      <p class="shint">Press <kbd>/</kbd> to search. Several words must all match, in any order (try <em>mcdermott texture</em>). <kbd>Esc</kbd> clears.</p>
+      <p class="shint">Press <kbd>/</kbd> to search, <kbd>Esc</kbd> to clear, and <kbd>?</kbd> for more keyboard shortcuts.</p>
       <div class="filters">
         <div class="frow"><span class="flab">Topics</span>${chipRow('topic', topics)}</div>
         <div class="frow"><span class="flab">Year</span><div class="dd"><button type="button" class="ddb" id="yb" aria-haspopup="listbox" aria-expanded="false"><span>all</span><span aria-hidden="true">▾</span></button><ul class="ddl" id="yl" role="listbox" hidden><li><button type="button" role="option" data-year="" aria-selected="true">all</button></li>${years.map(y => `<li><button type="button" role="option" data-year="${y}" aria-selected="false">${y}</button></li>`).join('')}</ul></div></div>
@@ -464,7 +477,7 @@ ${papers.map(paperHTML).join('\n')}
 function presHTML(t) {
   const [y, m] = t.date.split('-');
   const l = t.links || {}, up = isUpcoming(t), authors = t.authors && t.authors.length ? t.authors : [site.me], tps = t.topics || [];
-  const quiet = LINK_KEYS.filter(k => l[k]).map(k => `<a href="${esc(l[k])}" target="_blank" rel="noopener">${LINK_LABEL[k] || k}</a>`).join('<i>·</i>');
+  const quiet = LINK_KEYS.filter(k => l[k]).map(k => `<a data-k="${k}" href="${esc(l[k])}" target="_blank" rel="noopener">${LINK_LABEL[k] || k}</a>`).join('<i>·</i>');
   const tagsHTML = tps.map(x => `<span class="tag t" style="--c:${topicColor(x)}">${esc(x)}</span>`).join('');
   const text = [t.title, authors.join(' '), t.venue, t.city, t.type, y, tps.join(' ')].filter(Boolean).join(' ').toLowerCase();
   return `        <article class="paper hc" data-year="${y}" data-upcoming="${up ? 1 : 0}" data-type="${esc(t.type)}" data-topics="${esc(tps.join('|'))}" data-text="${esc(text)}">
@@ -516,9 +529,9 @@ function presStats() {
   return PRES_STATS.filter(k => v[k] !== null && v[k] !== undefined).map((k, i) => statBadge(v[k], k, i)).join('');
 }
 const presentationsBody = `    <section>
-      ${head('Presentations', site.ledes.presentations, presStats())}
+      ${head('Presentations', LEDES.presentations, presStats())}
       <div class="sbox"><input type="search" id="q" placeholder="search titles, venues, cities" aria-label="Search presentations" aria-keyshortcuts="/" autocomplete="off"><kbd aria-hidden="true">/</kbd></div>
-      <p class="shint">Press <kbd>/</kbd> to search. Several words must all match, in any order (try <em>poster boston</em>). <kbd>Esc</kbd> clears.</p>
+      <p class="shint">Press <kbd>/</kbd> to search, <kbd>Esc</kbd> to clear, and <kbd>?</kbd> for more keyboard shortcuts.</p>
       <div class="filters">
 ${presTopics.length ? `        <div class="frow"><span class="flab">Topics</span>${chipRow('topic', presTopics.map(id => ({ id, color: topicColor(id), dark: (topics.find(x => x.id === id) || {}).dark })))}</div>\n` : ''}        <div class="frow"><span class="flab">Format</span>${chipRow('type', PRES_TYPES.map(id => ({ id, color: PRES_COLOR[id] })))}</div>
         <div class="frow"><span class="flab">Year</span><div class="dd"><button type="button" class="ddb" id="yb" aria-haspopup="listbox" aria-expanded="false"><span>all</span><span aria-hidden="true">▾</span></button><ul class="ddl" id="yl" role="listbox" hidden><li><button type="button" role="option" data-year="" aria-selected="true">all</button></li>${nUpcoming ? '<li><button type="button" role="option" data-year="upcoming" aria-selected="false">upcoming</button></li>' : ''}${presYears.map(y => `<li><button type="button" role="option" data-year="${y}" aria-selected="false">${y}</button></li>`).join('')}</ul></div></div>
@@ -532,46 +545,68 @@ ${presGroups}
 
 /* ---------- lately ---------- */
 const latelyBody = `    <section>
-      ${head('Lately', site.ledes.lately)}
+      ${head('Lately', LEDES.lately)}
       <ul class="rows" id="lately">
 ${lately.map((c, i) => {
   const n = c.items.length;
   const cls = n <= 1 ? 'one' : n === 2 ? 'two' : '';
-  const cards = c.items.map((t, k) => `<div class="card"${k ? ' hidden' : ''}>${rich(t)}</div>`).join('');
-  const nav = n > 1 ? `<div class="nav" hidden><button type="button" data-d="1" aria-label="Go back in time">‹</button><button type="button" data-d="-1" aria-label="Go forward in time" disabled>›</button><span class="pos" aria-live="polite">now · 1 of ${n}</span></div>` : '';
+  /* every card stays in the layout (the unseen ones are only invisible), so the row is as tall as its tallest card and nothing below ever jumps */
+  const cards = c.items.map((t, k) => `<div class="card${k ? ' off' : ''}">${rich(t)}</div>`).join('');
+  const nav = n > 1 ? `<div class="nav" hidden><button type="button" class="kb" data-d="1" aria-label="Go back in time">${AR('l')}</button><button type="button" class="kb" data-d="-1" aria-label="Go forward in time" disabled>${AR('r')}</button><span class="pos" aria-live="polite">now · 1 of ${n}</span><span class="ud">${K('u', 'd').replace(/ <span class="or">or<\/span> /, '')} rows</span></div>` : '';
   return `        <li class="row" style="--c:${RAINBOW[i % RAINBOW.length]}"><span class="lg">${esc(c.label)}</span><div class="tx"><div class="stk ${cls}">${cards}</div>${nav}</div></li>`;
 }).join('\n')}
       </ul>
     </section>`;
 
-/* ---------- consulting: three blind-spot scenes ---------- */
-const ART = {
-  check: `<svg viewBox="0 0 200 110" fill="none" stroke="#121826" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Magnifying glass over the blind spot test"><path d="M26 52h24M38 40v24"/><circle cx="150" cy="50" r="30" fill="#fff"/><circle cx="150" cy="50" r="10" fill="#B08CFF"/><path d="M172 72l18 20" stroke-width="7"/></svg>`,
-  demo: `<svg viewBox="0 0 200 110" fill="none" stroke="#121826" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Eye looking at a card with the blind spot test"><path d="M6 55c8-14 28-14 36 0-8 14-28 14-36 0z" fill="#fff"/><circle cx="24" cy="55" r="5" fill="#121826"/><rect x="66" y="16" width="124" height="66" rx="12" fill="#fff"/><path d="M86 49h20M96 39v20"/><circle cx="168" cy="49" r="8" fill="#B08CFF"/><path d="M46 55h16" stroke-dasharray="2 7"/><path d="M80 98h96M88 92l-8 6 8 6M168 92l8 6-8 6"/></svg>`,
-  explain: `<svg viewBox="0 0 200 110" fill="none" stroke="#121826" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Camera viewfinder around the blind spot test"><path d="M20 34V16h18M162 16h18v18M180 76v18h-18M38 94H20V76"/><path d="M62 55h22M73 44v22"/><circle cx="136" cy="55" r="9" fill="#B08CFF"/><circle cx="170" cy="28" r="5" fill="#B08CFF" stroke="none"/></svg>`
+/* ---------- consulting: sticker cards ---------- */
+const SV = (inner, vb) => `<svg viewBox="${vb || '0 0 24 24'}" aria-hidden="true">${inner}</svg>`;
+const CICON = {
+  check: SV('<circle cx="10.5" cy="10.5" r="6.5"/><path d="M7.8 10.7l2.1 2.1 3.8-4.2"/><path d="M15.5 15.5 21 21"/>'),
+  explain: SV('<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 15.5h4"/>'),
+  teach: SV('<path d="M2.5 9.5 12 5l9.5 4.5L12 14z"/><path d="M6.5 11.8v4.2c0 1.4 2.5 2.6 5.5 2.6s5.5-1.2 5.5-2.6v-4.2"/><path d="M21.5 9.5V15"/>'),
+  demo: SV('<path d="M2 12s3.7-6.5 10-6.5S22 12 22 12s-3.7 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/>'),
+  test: SV('<path d="M9 3h6M10 3v6l-5.4 9.4A1.6 1.6 0 0 0 6 21h12a1.6 1.6 0 0 0 1.4-2.6L14 9V3"/><path d="M7.4 15h9.2"/>'),
+  guest: SV('<circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-3.8 3.7-5.6 7-5.6s6.2 1.8 7 5.6"/>'),
+  sources: SV('<path d="M3 5.5c3-1.3 6-1.3 9 .8 3-2.1 6-2.1 9-.8V19c-3-1.3-6-1.3-9 .8-3-2.1-6-2.1-9-.8z"/><path d="M12 6.3v13.5"/>')
 };
+/* checked here, once the icon list exists */
+(consulting.cards || []).forEach((c, i) => {
+  ['label', 'title', 'text'].forEach(f => need(`data/consulting.json[${i}]`, c, f));
+  need(`data/consulting.json[${i}]`, c, 'icon', v => Object.keys(CICON).includes(v), 'one of: ' + Object.keys(CICON).join(', '));
+});
+const TILT = [-8, 7, -6, 8, -7, 6, -8];
 const consultingBody = `    <section>
-      ${head('Consulting', site.ledes.consulting)}
-      <div class="cards">
-${consulting.cards.map(c => `        <div class="cc"><div class="art">${ART[c.art] || ''}</div><div class="bd"><h3>${esc(c.title)}</h3><p>${rich(c.text)}</p></div></div>`).join('\n')}
+      ${head('Consulting', LEDES.consulting)}
+      <div class="svcs">
+${consulting.cards.map((c, i) => `        <div class="svc" style="--c:${RAINBOW[i % RAINBOW.length]}"><div class="sk" style="--r:${TILT[i % TILT.length]}deg">${CICON[c.icon] || ''}${esc(c.label)}</div><div class="cb"><h3>${esc(c.title)}</h3><p>${rich(c.text)}</p>${c.example ? `<div class="eg">${rich(c.example)}</div>` : ''}</div></div>`).join('\n')}
       </div>
     </section>`;
 
-/* ---------- contact ---------- */
+/* ---------- contact: colored stickers ---------- */
+/* glyphs are black and drawn to the same visual size; the three brand logos use the official paths (simple-icons, CC0) */
 const ICON = {
-  youtube: c => `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="1.5" y="4.5" width="21" height="15" rx="4.5" fill="${c}"/><path d="M10 8.8l5.2 3.2-5.2 3.2z" fill="#fff"/></svg>`,
-  instagram: c => `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="${c}" stroke-width="2.4"><rect x="3" y="3" width="18" height="18" rx="5.5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.3" cy="6.7" r="1.2" fill="${c}" stroke="none"/></svg>`,
-  github: c => `<svg viewBox="0 0 24 24" aria-hidden="true" fill="${c}"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.7 1.7.3 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg>`,
-  scholar: c => `<svg viewBox="0 0 24 24" aria-hidden="true" fill="${c}"><path d="M12 3 1 9l11 6 9-4.9V17h2V9z"/><path d="M5 13.2V17c0 1.7 3.1 3 7 3s7-1.3 7-3v-3.8l-7 3.8z"/></svg>`,
-  other: c => `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="${c}" stroke-width="2.4" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>`
+  mail: SV('<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M4 7.5l8 6 8-6"/>'),
+  youtube: SV('<rect x="2.5" y="5" width="19" height="14" rx="4.5"/><path class="f" d="M10.2 9.2l4.6 2.8-4.6 2.8z"/>'),
+  instagram: SV('<rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="3.9"/><circle class="f" cx="17.1" cy="6.9" r="1"/>'),
+  tiktok: SV('<path d="M14 4v10.2a3.6 3.6 0 1 1-3.6-3.6"/><path d="M14 4c.3 2.4 1.9 4 4.4 4.2"/>'),
+  bluesky: SV('<path class="f" d="M5.202 2.857C7.954 4.922 10.913 9.11 12 11.358c1.087-2.247 4.046-6.436 6.798-8.501C20.783 1.366 24 .213 24 3.883c0 .732-.42 6.156-.667 7.037-.856 3.061-3.978 3.842-6.755 3.37 4.854.826 6.089 3.562 3.422 6.299-5.065 5.196-7.28-1.304-7.847-2.97-.104-.305-.152-.448-.153-.327 0-.121-.05.022-.153.327-.568 1.666-2.782 8.166-7.847 2.97-2.667-2.737-1.432-5.473 3.422-6.3-2.777.473-5.899-.308-6.755-3.369C.42 10.04 0 4.615 0 3.883c0-3.67 3.217-2.517 5.202-1.026"/>'),
+  threads: SV('<path class="f" d="M18.263 11.097c-.03-3.486-1.92-5.586-5.111-5.586-2.13 0-3.922.963-4.863 2.499l2.062 1.438c.535-.843 1.272-1.543 2.628-1.543 1.528 0 2.318.85 2.544 2.431a15 15 0 0 0-2.236-.173c-4.125 0-6.068 1.867-6.068 4.336s1.943 3.99 4.804 3.99c3.139 0 5.013-2.115 5.781-4.735.798.361 1.348 1.204 1.348 2.47 0 3.387-3.907 5.232-7.22 5.232-4.885 0-8.077-3.207-8.077-8.424 0-6.392 4.223-10.487 9.9-10.487 3.808 0 5.69 1.671 6.97 3.914l2.108-1.475C21.44 2.078 18.331 0 13.663 0 6.227 0 1.168 5.277 1.168 12.934c0 7 4.953 11.066 10.856 11.066 4.878 0 9.809-2.846 9.809-7.716 0-2.545-1.46-4.231-3.569-5.187m-6.33 4.855c-1.077 0-2.026-.512-2.026-1.453 0-1.483 1.822-1.934 3.606-1.934.678 0 1.34.045 1.927.173-.422 1.927-1.671 3.215-3.508 3.214Z"/>'),
+  x: SV('<path class="f" d="M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z"/>'),
+  github: SV('<path class="f" d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.7 1.7.3 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/>'),
+  scholar: SV('<path d="M2.5 9.5 12 5l9.5 4.5L12 14z"/><path d="M6.5 11.8v4.2c0 1.4 2.5 2.6 5.5 2.6s5.5-1.2 5.5-2.6v-4.2"/><path d="M21.5 9.5V15"/>'),
+  other: SV('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>')
 };
-const ICON_COLOR = ['#FF5A4A', '#FF9F1C', '#4CD07D', '#4D9BFF', '#B08CFF', '#FF7EB6'];
-const shown = links.filter(l => l.url);
+const stickers = links.filter(l => l.url || l.soon);
 const contactBody = `    <section>
-      ${head('Contact', site.ledes.contact)}
-      <div class="email"><code id="em" data-e="${EMAIL_ENC}">(turn on JavaScript to see my email)</code><button class="btn cp" type="button" data-e="${EMAIL_ENC}">copy email</button></div>
-      <div class="pills">
-${shown.map((l, i) => `        <a class="pill" href="${esc(l.url)}" target="_blank" rel="noopener">${(ICON[l.icon] || ICON.other)(ICON_COLOR[i % ICON_COLOR.length])}${esc(l.name)}</a>`).join('\n')}
+      ${head('Contact', LEDES.contact)}
+      <div class="cst">
+        <button type="button" class="cs" id="cs-mail" style="--c:${RAINBOW[0]}" data-mail="${EMAIL_ENC}" aria-label="Email"><span class="gl">${ICON.mail}</span><small>Email</small></button>
+${stickers.map((l, i) => {
+  const c = RAINBOW[(i + 1) % RAINBOW.length], g = ICON[l.icon] || ICON.other, di = ` data-i="${esc(l.icon || 'other')}"`;
+  return l.url
+    ? `        <a class="cs" style="--c:${c}"${di} href="${esc(l.url)}" target="_blank" rel="noopener" aria-label="${esc(l.name)}"><span class="gl">${g}</span><small>${esc(l.name)}</small></a>`
+    : `        <span class="cs soon" style="--c:${c}"${di} role="img" aria-label="${esc(l.name)}, coming soon"><span class="gl">${g}</span><small>${esc(l.name)}</small></span>`;
+}).join('\n')}
       </div>
     </section>`;
 
@@ -600,7 +635,7 @@ page({ id: 'about', title: 'About', desc: 'About ' + site.name + ': training, re
 page({ id: 'papers', title: 'Papers', desc: 'Publications by ' + site.name + ', searchable by topic and year.', body: papersBody, file: 'papers/index.html' });
 page({ id: 'presentations', title: 'Presentations', desc: 'Talks, posters and demos by ' + site.name + '.', body: presentationsBody, file: 'presentations/index.html' });
 page({ id: 'lately', title: 'Lately', desc: 'What ' + site.name + ' has been writing, making, learning and brewing lately.', body: latelyBody, file: 'lately/index.html' });
-page({ id: 'consulting', title: 'Consulting', desc: 'Perception science consulting for videos and shows: checking claims, demos and explaining on camera.', body: consultingBody, file: 'consulting/index.html' });
+page({ id: 'consulting', title: 'Consulting', desc: 'Perception science consulting for videos and shows: checking claims, explaining papers, teaching, demos and more.', body: consultingBody, file: 'consulting/index.html' });
 page({ id: 'contact', title: 'Contact', desc: 'How to reach ' + site.name + ' by email and on social media.', body: contactBody, file: 'contact/index.html' });
 page({ id: '404', title: 'Page not found', desc: 'Page not found.', body: notFoundBody, file: '404.html' });
 

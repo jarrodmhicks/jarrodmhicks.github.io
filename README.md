@@ -70,9 +70,9 @@ This creates `data/papers/hicks-2027-short-title.json`. Open it and fill it in:
 
 **New sticker.** A paper with no citations yet gets a pink **new** sticker where the citation badge would go, if it is recent. Add the month so it is accurate: `month = {oct}` in the `.bib` entry (or `"month": 10` in a JSON file) means "new for about 7 months". With only a year, a paper counts as new for that calendar year. To force it either way, add `new = {true}` or `new = {false}` (JSON: `"new": true`). Once a paper has citations, the yellow citation badge replaces it.
 
-**Motion.** Small animations are built in and switch off for visitors who set "reduce motion": the first time you open a page in a visit its tabs, title, stickers and cards animate in; sorting glides cards to their new places; filters fold non-matching cards away; the cite box eases open; paging back through Lately flicks the top card off the stack. Nothing needs configuring.
+**Motion.** Small animations are built in and switch off for visitors who set "reduce motion": the first time you open a page in a visit its tabs, title, stickers and cards animate in; sorting glides cards to their new places; filters fold non-matching cards away; the cite box eases open; paging through Lately shuffles cards out from behind the pile and back; the period on the home page cycles through the rainbow when clicked. Nothing needs configuring.
 
-**Keyboard shortcuts.** `1`-`7` jump to the pages, `/` searches (from any page it opens Papers with the search box focused), `?` shows the full list, `Esc` clears the search. On Papers and Presentations, `j`/`k` step through the cards, `c` opens the BibTeX box and `s` switches the sort. The list is the "keyboard shortcuts" link in the footer (hidden on phones). Searching several words matches papers containing all of them.
+**Keyboard shortcuts.** `1`-`7` jump to the pages, `/` searches (from any page it opens Papers with the search box focused), `?` shows the full list, `Esc` clears the search. In the search box, `Enter` selects the top result. On Papers and Presentations, `n` or `↓` selects the next card, `b` or `↑` the previous one, `←` and `→` move along the selected card's links (DOI, PDF, code, data, slides, video) and `Enter` opens the highlighted one, `c` opens the BibTeX box, and `v` views the card (a paper's PDF, or its DOI if there is no PDF; a talk's slides, or its video). On Lately, `↑` and `↓` choose a row and `←` and `→` page it back and forward. The list is the "keyboard shortcuts" link in the footer (hidden on phones). Searching several words matches papers containing all of them. The links need no setup: the `←`/`→` highlight and `v` read the links already on each card.
 
 Each paper gets a **cite** tag that opens its BibTeX with "copy BibTeX" and "copy citation" buttons. Both are built from the fields above. The type is guessed from the venue (a venue with "thesis" becomes a thesis, one with "conference" or "CCN" a conference paper, everything else a journal article). To force one, add `"bibtype": "article"`, `"inproceedings"` or `"phdthesis"`.
 
@@ -88,21 +88,21 @@ The twelve presentations that came with this site are made-up placeholders (`"pl
 
 ### Email and analytics
 
-- **Email:** The address in `site.json` is stored encoded in the page and filled in by a script, so simple scrapers do not find it. People without JavaScript see "turn on JavaScript to see my email".
+- **Email:** The Email sticker on the Contact page copies your address and shows a small toast with an "open mail app" button (on phones it opens the mail app directly). The address in `site.json` is stored encoded in the page and decoded by a script when clicked, so simple scrapers do not find it. Without JavaScript the sticker does nothing.
 - **Analytics (optional):** In `data/site.json`, put your GoatCounter code in `analytics.goatcounter` (for example `"jarrodhicks"` for jarrodhicks.goatcounter.com), or a Cloudflare Web Analytics token in `analytics.cloudflare`. Empty means no tracking script is added at all. Preview builds (`--local`) never include it.
 
 ### Other files in `data/`
 
 | File | What it controls |
 | --- | --- |
-| `site.json` | Name, email, the tagline, intro line, About paragraphs, and the short line under each page title |
-| `timeline.json` | The Path on the About page |
+| `site.json` | Name, email, the tagline, intro line, About paragraphs, and the short line under each page title (`ledes`; leave one empty, like About, Papers and Presentations, and no line or gap appears) |
+| `timeline.json` | The Path on the About page. Each step's sticker shows its end year (or `now` when the `when` text ends in anything but a year), with the full `when` text under it |
 | `lately.json` | The Lately page. One entry per colored label (one word, 7 at most). `items` is a list of texts, **newest first**: the first one is shown, and the arrows page back through the rest. To add something new, put it at the top of that label's list. No dates anywhere. The footer shows "Last updated", set automatically from your newest commit that touched `data/` |
-| `links.json` | The Contact page buttons. A link with an empty `url` is left off |
-| `consulting.json` | The three Consulting cards (`art` is `check`, `demo` or `explain`) |
+| `links.json` | The Contact stickers after Email, in rainbow order. `icon` is `youtube`, `instagram`, `tiktok`, `bluesky`, `threads`, `x`, `github` or `scholar`. A sticker with an empty `url` is left off, unless it has `"soon": true`, which shows it tinted, dashed and badged "soon". When a profile is ready, fill in its `url` and delete `"soon": true` |
+| `consulting.json` | The Consulting cards, in order (sticker colors follow the rainbow by position). `label` is the word on the sticker, `icon` is `check`, `explain`, `teach`, `demo`, `test`, `guest` or `sources`, `title` is the question, `text` the answer, and `example` the small line underneath (optional) |
 | `topics.json` | Paper topics and their colors |
 
-**To do:** `links.json` needs your YouTube and Instagram URLs. They are blank on purpose, so they do not show yet. The three `[bracketed]` lines on the Lately page (listening to, reading, brewing) are placeholders too.
+**To do:** `links.json` needs your YouTube and Instagram URLs. They are blank on purpose, so they do not show yet; TikTok, Bluesky, Threads and X are marked `"soon"`. The three `[bracketed]` lines on the Lately page (listening to, reading, brewing) are placeholders too.
 
 ## What is where
 
@@ -111,7 +111,7 @@ dist/                              the built site (made by build.js, never commi
 .github/workflows/deploy.yml       the Action: builds and publishes on every push
 assets/css/site.css                all styling
 assets/fonts/                      Fraunces, Inter Tight, JetBrains Mono (self-hosted, SIL OFL)
-assets/js/site.js                  menu on phones, copy email, papers search and filters, 404
+assets/js/site.js                  menu on phones, email sticker, papers search and filters, keyboard shortcuts, Lately, the Konami rain, 404
 assets/img/jarrod.jpg              the portrait on the home page
 assets/favicon.svg                 browser tab icon
 data/                              everything you edit

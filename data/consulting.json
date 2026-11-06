@@ -1,19 +1,53 @@
 {
   "cards": [
     {
-      "title": "Check",
-      "art": "check",
-      "text": "I can make sure the science is right."
+      "label": "check",
+      "icon": "check",
+      "title": "Worried you'll get it wrong?",
+      "text": "I can make sure the science is right.",
+      "example": "e.g., read a script or watch a cut before it goes out"
     },
     {
-      "title": "Demo",
-      "art": "demo",
-      "text": "I can suggest or make demos and illusions."
+      "label": "explain",
+      "icon": "explain",
+      "title": "Stuck on a paper?",
+      "text": "I can explain a dense research paper in plain language.",
+      "example": "e.g., a one-page summary of what a new study does and does not show"
     },
     {
-      "title": "Explain",
-      "art": "explain",
-      "text": "I can break down the science behind it."
+      "label": "teach",
+      "icon": "teach",
+      "title": "Confused by the science??",
+      "text": "I can teach a concept, on camera or off.",
+      "example": "e.g., a plain-language walk-through of how we perceive something"
+    },
+    {
+      "label": "demo",
+      "icon": "demo",
+      "title": "Want a demo that lands?",
+      "text": "I can suggest or build demos and illusion to make the idea click.",
+      "example": "e.g., a beautiful animated illusion"
+    },
+    {
+      "label": "test",
+      "icon": "test",
+      "title": "Want your audience to experience it?",
+      "text": "I can design a simple experiment your audience can take part in.",
+      "example": "e.g., a web-based demo viewers do at home with results you can show"
+    },
+    {
+      "label": "guest",
+      "icon": "guest",
+      "title": "Need an expert on camera?",
+      "text": "I can join you for an interview, a live demo, or a short explainer.",
+      "example": "e.g., a live illusion and explanation"
+    },
+    {
+      "label": "sources",
+      "icon": "sources",
+      "title": "Looking for evidence?",
+      "text": "I can point you to the right papers or people.",
+      "example": "e.g., a reading list or an intro to the lab that did the work"
     }
   ]
 }

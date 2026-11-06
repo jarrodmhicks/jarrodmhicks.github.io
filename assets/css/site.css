@@ -57,7 +57,7 @@ p{max-width:66ch}
 .hero h1{font-family:var(--f-disp);font-weight:700;font-variation-settings:'SOFT' 100,'WONK' 1;font-size:clamp(32px,5.4vw,58px);line-height:1.08;margin:0 0 16px;white-space:nowrap}
 .hl{position:relative;display:inline-block;isolation:isolate}
 .hl:before{content:'';position:absolute;left:-8px;right:-4px;top:40%;bottom:0;background:var(--pc);border-radius:6px 16px 8px 14px/14px 8px 14px 6px;transform:rotate(-1.2deg);z-index:-1}
-.dot{color:var(--sec);font:inherit;font-variation-settings:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;display:inline-block;transition:transform .15s}
+.dot{color:var(--ink);font:inherit;font-variation-settings:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;display:inline-block;transition:transform .15s}
 .dot:hover{transform:scale(1.25)}
 .dot.pop{animation:dotpop .35s}
 @keyframes dotpop{40%{transform:scale(1.6) rotate(-8deg)}}
@@ -78,15 +78,17 @@ p{max-width:66ch}
 /* about */
 .abt{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:56px;align-items:start}
 .abt .phead{margin-bottom:20px}
-.abt h4{margin-top:6px}
 .abt p{max-width:none;margin-top:0}
 @media(max-width:760px){.abt{grid-template-columns:1fr;gap:28px}}
-.tl{list-style:none;margin:0;padding:0 0 0 22px;border-left:2.5px solid var(--ink)}
-.tl li{position:relative;padding:0 0 18px 4px}
-.tl li:before{content:'';position:absolute;left:-30px;top:5px;width:12px;height:12px;border-radius:50%;background:var(--c);border:2.5px solid var(--ink)}
-.tl .when{font:500 12px var(--f-mono);color:#111;background:var(--c);border:1.5px solid var(--ink);border-radius:8px;padding:0 8px;display:inline-block;margin-bottom:3px}
-.tl b{display:block;font-weight:600}
-.tl .w{color:var(--mute);font-size:14px}
+/* path: a sticker per step showing the end year, a line through them, the full range in small text */
+.tl{list-style:none;margin:0;padding:0}
+.tl li{position:relative;display:grid;grid-template-columns:64px 1fr;gap:16px;padding-bottom:20px;align-items:center}
+.tl li:not(:last-child):before{content:'';position:absolute;left:31px;top:32px;bottom:-32px;width:2.5px;background:var(--ink)}
+.tl .dt{position:relative;z-index:1;width:64px;height:64px;border-radius:50%;background:var(--c);color:#111;border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink);display:grid;place-items:center;font:700 15px var(--f-mono);letter-spacing:-.02em;--r:-6deg;transform:rotate(var(--r));cursor:pointer;user-select:none}
+.tl li:nth-child(even) .dt{--r:6deg}
+.tl b{display:block;font-weight:600;line-height:1.3}
+.tl .w{color:var(--mute);font-size:14px;display:block}
+.tl .rng{display:block;font:400 11px var(--f-mono);color:var(--mute);margin-top:2px}
 
 /* papers */
 .filters{display:grid;gap:10px;margin:14px 0 8px}
@@ -115,11 +117,17 @@ kbd{font:600 11px var(--f-mono);color:var(--ink);background:var(--bg);border:1.5
 .sbox:focus-within kbd,.sbox.has kbd{display:none}
 .shint{font:400 11.5px var(--f-mono);color:var(--mute);margin:8px 0 0}
 .shint em{font-style:normal;color:var(--ink)}
-.paper.sel{box-shadow:6px 6px 0 var(--pc);transform:translate(-2px,-2px)}
+.paper.sel,.paper.sel:hover{box-shadow:6px 6px 0 var(--pc);transform:translate(-2px,-2px)}
+/* the link you land on with the left and right arrows: a swipe of the page color */
+.paper .ql a:focus-visible{outline:none;background:var(--pc);color:#111;border-radius:5px;box-shadow:0 0 0 3px var(--pc);text-decoration:none}
+/* one drawn arrow, rotated, so all four arrow keys are the same size */
+.ar{width:1.05em;height:1.05em;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;display:block}
+.ar.l{transform:rotate(180deg)}.ar.u{transform:rotate(-90deg)}.ar.d{transform:rotate(90deg)}
+kbd .ar{width:12px;height:12px}
 @media(hover:none),(pointer:coarse){.sbox kbd,.shint,.klink{display:none}}
 .klink{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;opacity:.55;text-decoration:underline dotted;text-underline-offset:3px}
 .klink:hover,.klink:focus-visible{opacity:1;color:var(--ink)}
-dialog#keys{max-width:min(560px,calc(100vw - 32px));width:100%;border:2px solid var(--ink);border-radius:18px;background:var(--bg);color:var(--ink);padding:22px 24px;box-shadow:8px 8px 0 var(--ink)}
+dialog#keys{max-width:min(600px,calc(100vw - 32px));width:100%;border:2px solid var(--ink);border-radius:18px;background:var(--bg);color:var(--ink);padding:22px 24px;box-shadow:8px 8px 0 var(--ink)}
 dialog#keys::backdrop{background:rgba(18,24,38,.45)}
 dialog#keys h2{font-family:var(--f-disp);font-variation-settings:'SOFT' 100,'WONK' 1;font-size:26px;margin:0 0 10px}
 dialog#keys h3{font:600 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:18px 0 6px}
@@ -127,7 +135,11 @@ dialog#keys dl{margin:0;display:grid;gap:8px}
 dialog#keys dl>div{display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:baseline}
 dialog#keys dt{white-space:nowrap}
 dialog#keys dd{margin:0;font-size:14px;line-height:1.45}
-dialog#keys dd b{display:inline-block;min-width:1.4em;text-align:center;background:var(--c);border:1.5px solid var(--ink);border-radius:50%;font:700 11px/1.4 var(--f-mono);color:#111}
+dialog#keys kbd{display:inline-grid;place-items:center;min-width:26px;height:22px;padding:0 5px;box-sizing:border-box;vertical-align:middle}
+dialog#keys .or{font:400 11px var(--f-mono);color:var(--mute);margin:0 3px}
+dialog#keys .pgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px 12px;margin-top:8px}
+dialog#keys .pk{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+dialog#keys .pk b{font:600 11px var(--f-mono);min-width:22px;text-align:center;color:#111;background:var(--c);border:1.5px solid var(--ink);border-radius:6px;padding:1px 6px;box-shadow:1.5px 1.5px 0 var(--ink)}
 dialog#keys .kfoot{font:400 11.5px var(--f-mono);color:var(--mute);margin:16px 0}
 @media(max-width:480px){dialog#keys dl>div{grid-template-columns:1fr;gap:2px}}
 .paper{position:relative;border:2px solid var(--ink);border-radius:16px;padding:14px 18px;margin-top:28px;background:var(--bg);transition:transform .15s,box-shadow .15s}
@@ -237,40 +249,85 @@ button.tag[aria-expanded=true]{background:var(--ink);color:var(--bg)}
 
 /* lately: stacks of cards */
 .rows{list-style:none;margin:0;padding:0;display:grid;gap:14px}
-.row{display:grid;grid-template-columns:118px 1fr;gap:14px;align-items:start}
+#lately{gap:26px}
+.row{position:relative;display:grid;grid-template-columns:118px 1fr;gap:14px;align-items:start;transition:background .15s,box-shadow .15s}
 .lg{font:500 12px var(--f-mono);color:#111;background:var(--c);border:2px solid var(--ink);border-radius:999px;padding:3px 0;text-align:center;margin-top:12px}
 .row .tx{min-width:0;padding-bottom:6px}
-.stk{position:relative;margin-right:12px;margin-bottom:12px}
-.stk .card{position:relative;z-index:3;background:var(--bg);border:2px solid var(--ink);border-radius:14px;padding:14px 16px}
-.stk .card[hidden]{display:none}
+/* all of a row's cards share one grid cell, so the row is as tall as its tallest card and rows below never move */
+.stk{position:relative;display:grid;perspective:1400px;margin-right:12px;margin-bottom:12px}
+.stk .card{grid-area:1/1;position:relative;z-index:3;background:var(--bg);border:2px solid var(--ink);border-radius:14px;padding:14px 16px;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.stk .card.off{visibility:hidden}
 .stk::before,.stk::after{content:"";position:absolute;inset:0;border:2px solid var(--ink);border-radius:14px;background:var(--c);opacity:.55}
 .stk::before{transform:translate(6px,6px);z-index:2}
 .stk::after{transform:translate(12px,12px);z-index:1;opacity:.3}
 .stk.one::before,.stk.one::after{display:none}
 .stk.two::after{display:none}
-.nav{display:flex;gap:6px;align-items:center;font:500 11px var(--f-mono);color:var(--mute)}
+.card a{color:inherit;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;border-radius:4px}
+.card a:hover,.card a:focus-visible{background:var(--c);text-decoration:none;box-shadow:0 0 0 3px var(--c);outline:none}
+.nav{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font:500 11px var(--f-mono);color:var(--mute)}
 .nav[hidden]{display:none}
-.nav button{font:500 13px var(--f-mono);background:var(--bg);color:var(--ink);border:2px solid var(--ink);border-radius:8px;padding:0 9px;cursor:pointer;line-height:1.4}
-.nav button:hover:not(:disabled){background:var(--ink);color:var(--bg)}
-.nav button:disabled{opacity:.3;cursor:default}
+.nav .pos{white-space:nowrap}
+.nav .kb{font:600 13px/1 var(--f-mono);min-width:34px;height:28px;display:inline-grid;place-items:center;color:var(--ink);background:var(--bg);border:1.5px solid var(--ink);border-radius:7px;box-shadow:2px 2px 0 var(--ink);padding:0 8px;cursor:pointer;transition:transform .1s,box-shadow .1s,background .15s}
+.nav .kb .ar{width:14px;height:14px}
+.nav .kb:hover:not(:disabled){transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink)}
+.nav .kb:active:not(:disabled){transform:translate(1px,1px);box-shadow:0 0 0 var(--ink)}
+.nav .kb:disabled{opacity:.3;box-shadow:none;cursor:default}
+.nav .ud{display:inline-flex;visibility:hidden;align-items:center;gap:5px;margin-left:10px;font:400 11px var(--f-mono);color:var(--mute)}
+.nav .ud kbd{display:inline-grid;place-items:center;min-width:26px;height:22px;padding:0 5px;box-sizing:border-box;font-size:10.5px}
+@media(hover:none),(pointer:coarse){.nav .ud{display:none}}
+/* the row you chose with the up and down keys: a tint and colored keys, in that row's color */
+.row.act{background:color-mix(in srgb,var(--c) 16%,transparent);box-shadow:0 0 0 9px color-mix(in srgb,var(--c) 16%,transparent);border-radius:14px}
+.row.act .nav .ud{visibility:visible}
+.row.act .nav .kb:not(:disabled){background:var(--c)}
 @media(max-width:560px){.row{grid-template-columns:1fr;gap:6px}.lg{width:max-content;padding:3px 14px;margin-top:0}}
 
-/* consulting */
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
-.cc{border:2px solid var(--ink);border-radius:18px;overflow:hidden;background:var(--bg);display:flex;flex-direction:column}
-.cc .art{border-bottom:2px solid var(--ink);background:var(--soft);display:grid;place-items:center;padding:14px;height:150px}
-.cc .art svg{height:100%;width:auto;max-width:100%}
-.cc .bd{padding:18px 22px 22px;display:flex;flex-direction:column;gap:8px;flex:1}
-.cc h3{font-size:22px;margin:0}
-.cc p{margin:0;font-size:17px;line-height:1.4;color:var(--ink);text-wrap:balance}
+/* consulting: one sticker card per service, the sticker hanging off the left edge */
+.sk{--r:-8deg;width:76px;height:76px;border-radius:50%;background:var(--c);color:#111;border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font:700 10.5px var(--f-mono);letter-spacing:.04em;text-transform:uppercase;transform:rotate(var(--r));user-select:none;cursor:pointer;flex:none}
+.sk svg{width:26px;height:26px;fill:none;stroke:#111;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.svcs{display:flex;flex-direction:column;gap:26px;padding:10px 0 8px 38px}
+.svc{position:relative;border:2px solid var(--ink);border-radius:16px;background:var(--bg);box-shadow:6px 6px 0 var(--c);padding:18px 22px 18px 66px;display:flex;align-items:center;min-height:104px}
+.svc .sk{position:absolute;left:-38px;top:50%;margin-top:-38px}
+.svc .cb{display:flex;flex-direction:column;gap:5px;min-width:0}
+.svc h3{font:600 21px/1.2 var(--f-disp);font-variation-settings:'SOFT' 100,'WONK' 1;margin:0;text-wrap:balance}
+.svc p{margin:0;font-size:16.5px;line-height:1.4}
+.svc .eg{font:400 12px/1.5 var(--f-mono);color:var(--mute)}
+@media(max-width:640px){
+  .svcs{padding-left:32px;padding-right:6px}
+  .svc{padding:14px 14px 14px 58px;min-height:96px}
+  .sk{width:68px;height:68px}.svc .sk{left:-34px;margin-top:-34px}
+  .svc h3{font-size:18px}.svc p{font-size:15px}
+}
 
-/* contact */
-.email{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 22px}
-.email code{font:500 15px var(--f-mono);background:var(--soft);border:2px solid var(--ink);border-radius:12px;padding:8px 14px;user-select:all;overflow-wrap:anywhere}
-.pills{display:flex;gap:10px;flex-wrap:wrap}
-.pill{display:flex;align-items:center;gap:8px;border:2px solid var(--ink);border-radius:999px;padding:8px 18px;text-decoration:none;font:500 14px var(--f-mono)}
-.pill:hover{background:var(--ink);color:var(--bg)}
-.pill svg{width:20px;height:20px;flex:none}
+/* contact: a colored sticker per place. Names show on hover; "soon" ones are tinted, dashed and badged */
+.cst{position:relative;display:flex;gap:22px 18px;flex-wrap:wrap;padding:8px 6px 26px}
+.cs{--r:-5deg;position:relative;width:92px;height:92px;border-radius:50%;background:var(--c);border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);display:grid;place-items:center;transform:rotate(var(--r));cursor:pointer;color:#111;text-decoration:none;font:inherit;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
+.cs:nth-child(even){--r:5deg}
+.cs .gl{display:grid;place-items:center}
+.cs svg{width:42px;height:42px;stroke:#111;fill:none;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+.cs svg .f{fill:#111;stroke:none}
+.cs[data-i=bluesky] svg,.cs[data-i=threads] svg,.cs[data-i=x] svg{width:30px;height:30px}
+.cs[data-i=tiktok] svg{width:54px;height:54px;stroke-width:1.65}
+.cs small{position:absolute;top:calc(100% + 10px);left:50%;transform:translateX(-50%) rotate(calc(var(--r)*-1));font:500 11px var(--f-mono);white-space:nowrap;color:var(--ink);opacity:0;pointer-events:none;transition:opacity .15s}
+.cs:hover small,.cs:focus-visible small{opacity:1}
+.cs.soon{cursor:default;box-shadow:none;background:color-mix(in srgb,var(--c) 34%,#fff);border:2px dashed #8d96a8}
+.cs.soon svg{stroke:#6b7488}.cs.soon svg .f{fill:#6b7488}
+.cs.soon:after{content:'soon';position:absolute;bottom:-3px;right:-8px;font:700 9px var(--f-mono);background:var(--bg);border:1.5px solid var(--ink);border-radius:999px;padding:0 7px;color:var(--ink);transform:rotate(calc(var(--r)*-1))}
+@media(hover:none){.cs small{display:none}}
+/* the toast at the bottom after you press the Email sticker */
+.pop{z-index:70}
+.pop-a{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:flex;align-items:center;gap:12px;background:var(--bg);border:2px solid var(--ink);border-radius:16px;box-shadow:4px 4px 0 var(--ink);padding:8px 6px 10px 10px;max-width:calc(100vw - 32px);overflow:hidden;animation:upIn .35s cubic-bezier(.3,1.3,.5,1)}
+.pop .tx{display:flex;flex-direction:column;gap:1px;min-width:0}
+.pop code{font:600 13px var(--f-mono);overflow-wrap:anywhere}
+.pop .tick{width:34px;height:34px;border-radius:50%;background:var(--c);border:2px solid var(--ink);display:grid;place-items:center;flex:none;transform:rotate(-8deg)}
+.pop .tick svg{width:18px;height:18px;fill:none;stroke:#111;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.pop .lab{font:600 10px var(--f-mono);letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}
+.pop .x{font:600 14px/1 var(--f-mono);background:none;border:0;cursor:pointer;color:var(--ink);padding:4px 8px;border-radius:8px}
+.pop .x:hover{background:var(--soft)}
+.pop .btn.s{padding:5px 11px}
+.pop .bar{position:absolute;left:0;bottom:0;height:4px;width:100%;background:var(--c);transform-origin:left;animation:drain 8s linear forwards}
+@keyframes drain{to{transform:scaleX(0)}}
+@keyframes upIn{from{opacity:0;transform:translate(-50%,24px)}to{opacity:1;transform:translate(-50%,0)}}
+@media(prefers-reduced-motion:reduce){.pop-a,.pop .bar{animation:none}}
 
 /* 404 */
 .nf{text-align:center}
@@ -285,10 +342,8 @@ footer a{color:inherit}
 a.in{font-weight:600;color:var(--ink);text-decoration:none;border-bottom:2px dashed var(--ink);padding-bottom:1px}
 a.in:hover{background:var(--pc);border-radius:4px 4px 0 0}
 
-/* highlighter rain (Konami code) */
-.rain{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:50}
-.rain i{position:absolute;top:-30px;height:var(--h);width:var(--w);background:var(--c);border-radius:6px 14px 8px 12px/12px 8px 12px 6px;mix-blend-mode:multiply;opacity:.9;animation:fall var(--t) linear forwards;will-change:transform}
-@keyframes fall{from{transform:translateY(0) rotate(var(--r0))}to{transform:translateY(calc(100vh + 60px)) rotate(var(--r1))}}
+/* highlighter rain (Konami code): drawn on a canvas, see site.js */
+#rain-cv{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:50}
 .rain-stop{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:51;pointer-events:auto;font:500 12px var(--f-mono);background:var(--bg);color:var(--ink);border:2px solid var(--ink);border-radius:12px;padding:6px 14px;cursor:pointer;box-shadow:3px 3px 0 var(--ink)}
 .rain-stop:hover{background:var(--ink);color:var(--bg)}
 
@@ -307,10 +362,10 @@ a.in:hover{background:var(--pc);border-radius:4px 4px 0 0}
 .enter .panel h1{animation:riseIn .5s .1s both cubic-bezier(.2,.8,.2,1)}
 .enter .phstats .stat{animation:popIn .5s .25s both}
 .enter .phstats .stat:nth-child(2){animation-delay:.31s}.enter .phstats .stat:nth-child(3){animation-delay:.37s}.enter .phstats .stat:nth-child(4){animation-delay:.43s}.enter .phstats .stat:nth-child(5){animation-delay:.49s}.enter .phstats .stat:nth-child(6){animation-delay:.55s}.enter .phstats .stat:nth-child(7){animation-delay:.61s}
-.enter .paper,.enter .row,.enter .cards>*{animation:riseIn .5s .45s both cubic-bezier(.2,.8,.2,1)}
-.enter .paper:nth-of-type(2),.enter .row:nth-child(2),.enter .cards>:nth-child(2){animation-delay:.53s}
-.enter .paper:nth-of-type(3),.enter .row:nth-child(3),.enter .cards>:nth-child(3){animation-delay:.61s}
-.enter .paper:nth-of-type(4),.enter .row:nth-child(4),.enter .cards>:nth-child(4){animation-delay:.69s}
-.enter .paper:nth-of-type(n+5),.enter .row:nth-child(n+5),.enter .cards>:nth-child(n+5){animation-delay:.76s}
+.enter .paper,.enter .row,.enter .svc{animation:riseIn .5s .45s both cubic-bezier(.2,.8,.2,1)}
+.enter .paper:nth-of-type(2),.enter .row:nth-child(2),.enter .svc:nth-child(2){animation-delay:.53s}
+.enter .paper:nth-of-type(3),.enter .row:nth-child(3),.enter .svc:nth-child(3){animation-delay:.61s}
+.enter .paper:nth-of-type(4),.enter .row:nth-child(4),.enter .svc:nth-child(4){animation-delay:.69s}
+.enter .paper:nth-of-type(n+5),.enter .row:nth-child(n+5),.enter .svc:nth-child(n+5){animation-delay:.76s}
 .enter .paper .cbadge{animation:popIn .45s .7s both}
 @media(prefers-reduced-motion:reduce){.enter *,.cw,.cw>.cwi{animation:none!important;transition:none!important}}

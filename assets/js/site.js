@@ -1,5 +1,5 @@
 /* jarrodmhicks.com: small, dependency-free helpers.
-   Menu on phones, copy-email buttons, papers filtering, and the random 404. */
+   Menu on phones, the email sticker, papers filtering, keyboard shortcuts, Lately, and the random 404. */
 (function () {
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
@@ -23,26 +23,21 @@
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { menu.hidden = true; mbtn.setAttribute('aria-expanded', 'false'); } });
   }
 
-  /* the email address is stored encoded in the page and filled in here, so it is not in the HTML for scrapers */
-  var em = $('#em');
-  if (em && em.getAttribute('data-e')) { try { em.textContent = atob(em.getAttribute('data-e')); } catch (e) {} }
-
-  /* copy buttons: email, BibTeX, citation */
-  $$('[data-copy], [data-e]').forEach(function (b) {
+  /* copy buttons (BibTeX, citation) */
+  $$('[data-copy]').forEach(function (b) {
     if (b.tagName !== 'BUTTON') return;
     var label = b.textContent;
     b.addEventListener('click', function () {
       var text = b.getAttribute('data-copy');
-      if (!text && b.getAttribute('data-e')) { try { text = atob(b.getAttribute('data-e')); } catch (e) { text = ''; } }
       var done = function () {
         b.textContent = 'copied';
         clearTimeout(b._t);
         b._t = setTimeout(function () { b.textContent = label; }, 2200);
       };
       var fallback = function () {
-        var src = $('#em') && b.getAttribute('data-e') ? $('#em') : (b.closest('.paper') && $('pre', b.closest('.paper')));
-        if (src && window.getSelection) {
-          var r = document.createRange(); r.selectNodeContents(src);
+        var pre = b.closest('.paper') && $('pre', b.closest('.paper'));
+        if (pre && window.getSelection) {
+          var r = document.createRange(); r.selectNodeContents(pre);
           var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
         }
         b.textContent = 'press ctrl/cmd + c';
@@ -54,6 +49,33 @@
     });
   });
 
+  /* contact: the Email sticker copies my address and shows a small toast with an "open mail app" button.
+     On phones (no hover) it opens the mail app straight away. The address is stored encoded in the page. */
+  (function () {
+    var btn = $('#cs-mail'); if (!btn) return;
+    var addr = ''; try { addr = atob(btn.getAttribute('data-mail')); } catch (e) {}
+    var timer = 0;
+    var closeToast = function () { clearTimeout(timer); var o = $('.pop'); if (o) o.remove(); };
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeToast(); });
+    btn.addEventListener('click', function () {
+      if (!addr) return;
+      if (window.matchMedia && window.matchMedia('(hover: none)').matches) { location.href = 'mailto:' + addr; return; }
+      closeToast();
+      var el = document.createElement('div');
+      el.className = 'pop pop-a'; el.setAttribute('role', 'status'); el.style.setProperty('--c', getComputedStyle(btn).getPropertyValue('--c'));
+      var show = function (copied) {
+        el.innerHTML = '<span class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="tx"><span class="lab">' + (copied ? 'copied' : 'my email') + '</span><code></code></span><a class="btn s" href="">open mail app</a><button class="x" type="button" aria-label="Dismiss">\u2715</button><span class="bar"></span>';
+        $('code', el).textContent = addr;
+        $('a.btn', el).setAttribute('href', 'mailto:' + addr);
+        $('.x', el).addEventListener('click', closeToast);
+        document.body.appendChild(el);
+        timer = setTimeout(closeToast, 8000);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(addr).then(function () { show(true); }, function () { show(false); });
+      else show(false);
+    });
+  })();
+
   /* cite panels on papers */
   $$('.cite-btn').forEach(function (b) {
     b.addEventListener('click', function () {
@@ -63,14 +85,26 @@
     });
   });
 
-  /* lately: page back through the stack */
-  $$('#lately .row').forEach(function (row) {
-    var cards = $$('.card', row), nav = $('.nav', row);
+  /* lately: page back through the stack of cards. The card you are moving to slides out from behind the pile
+     (left for back, right for forward) and lands on top, while the current one drops back into the pile. */
+  var latelyRows = [], latelyAct = -1;
+  var setLatelyAct = function (i) {
+    latelyAct = i;
+    latelyRows.forEach(function (s, k) { s.row.classList.toggle('act', k === i); });
+    if (i >= 0) latelyRows[i].row.scrollIntoView({ block: 'nearest', behavior: reduce ? 'auto' : 'smooth' });
+  };
+  var latelyGo = function (st, d) {
+    if (!st.go || st.busy) return; st.go(d);
+  };
+  $$('#lately .row').forEach(function (row, ri) {
+    var cards = $$('.card', row), nav = $('.nav', row), stk = $('.stk', row), st = { row: row, busy: false };
+    latelyRows.push(st);
+    row.addEventListener('click', function () { setLatelyAct(ri); });
     if (!nav || cards.length < 2) return;
-    var stk = $('.stk', row), pos = 0, label = $('.pos', nav), btns = $$('button', nav);
+    var pos = 0, label = $('.pos', nav), btns = $$('.kb', nav);
     nav.hidden = false;
     var paint = function () {
-      cards.forEach(function (c, i) { c.hidden = i !== pos; });
+      cards.forEach(function (c, i) { c.classList.toggle('off', i !== pos); c.style.zIndex = ''; });
       var left = cards.length - pos;
       stk.classList.toggle('one', left <= 1);
       stk.classList.toggle('two', left === 2);
@@ -78,28 +112,46 @@
       btns[0].disabled = pos >= cards.length - 1;
       btns[1].disabled = pos <= 0;
     };
-    var moving = false;
+    st.go = function (d) {
+      var nx = pos + d; if (nx < 0 || nx >= cards.length) return;
+      var o = cards[pos], n = cards[nx];
+      if (reduce || !o.animate) { pos = nx; paint(); return; }
+      st.busy = true; n.style.visibility = 'visible'; o.style.visibility = 'visible';
+      var dist = Math.min(stk.offsetWidth * 0.36, 230), sg = d > 0 ? -1 : 1, outAt = 'translate(' + (sg * dist) + 'px,-4%) rotate(' + (sg * 4) + 'deg)';
+      var run = [
+        n.animate([
+          { transform: 'translate(8px,8px) scale(.98)', zIndex: 1, opacity: 0, offset: 0, easing: 'cubic-bezier(.2,.75,.3,1)' },
+          { transform: outAt, zIndex: 1, opacity: 1, offset: .45 },
+          { transform: outAt, zIndex: 5, offset: .5, easing: 'cubic-bezier(.55,0,.3,1)' },
+          { transform: 'none', zIndex: 5, offset: 1 }], { duration: 320, fill: 'both' }),
+        o.animate([{ transform: 'none', zIndex: 2 }, { transform: 'translate(6px,6px) scale(.985)', zIndex: 2 }], { duration: 320, easing: 'cubic-bezier(.2,.75,.3,1)', fill: 'both' })
+      ], left = run.length;
+      run.forEach(function (a) { a.onfinish = function () {
+        if (--left) return;
+        run.forEach(function (x) { x.cancel(); });
+        cards.forEach(function (c) { c.style.opacity = ''; c.style.visibility = ''; });
+        pos = nx; paint(); st.busy = false;
+      }; });
+    };
     nav.addEventListener('click', function (e) {
       var b = e.target.closest('button');
-      if (!b || b.disabled || moving) return;
-      var next = Math.max(0, Math.min(cards.length - 1, pos + (+b.getAttribute('data-d')))), old = cards[pos];
-      if (next === pos) return;
-      if (reduce || !old.animate) { pos = next; paint(); return; }
-      moving = true;
-      var done = function () { moving = false; };
-      if (next > pos) {
-        /* paging back: the top card is flicked off the stack and the next one settles forward */
-        old.animate([{ transform: 'none', opacity: 1 }, { transform: 'translate(120%,-8%) rotate(14deg)', opacity: 0 }], { duration: 300, easing: 'cubic-bezier(.5,0,.8,.4)' }).onfinish = function () {
-          pos = next; paint();
-          cards[pos].animate([{ transform: 'scale(.95) translateY(8px)' }, { transform: 'none' }], { duration: 280, easing: 'cubic-bezier(.3,1.4,.5,1)' }).onfinish = done;
-        };
-      } else {
-        /* coming forward: the card slides back in from the side */
-        pos = next; paint();
-        cards[pos].animate([{ transform: 'translate(110%,-6%) rotate(12deg)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 340, easing: 'cubic-bezier(.3,1.3,.5,1)' }).onfinish = done;
-      }
+      if (!b || b.disabled) return;
+      setLatelyAct(ri); latelyGo(st, +b.getAttribute('data-d'));
     });
     paint();
+  });
+  /* up and down choose a row, left and right page that row */
+  if (latelyRows.length) document.addEventListener('keydown', function (e) {
+    if (e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented) return;
+    var t = e.target, tn = t && t.tagName;
+    if (tn === 'INPUT' || tn === 'TEXTAREA' || tn === 'SELECT' || (t && t.isContentEditable)) return;
+    var dlg = $('#keys'); if (dlg && dlg.open) return;
+    var k = e.key;
+    if (k === 'ArrowDown') { e.preventDefault(); setLatelyAct(latelyAct < 0 ? 0 : Math.min(latelyRows.length - 1, latelyAct + 1)); }
+    else if (k === 'ArrowUp') { e.preventDefault(); setLatelyAct(latelyAct < 0 ? 0 : Math.max(0, latelyAct - 1)); }
+    else if (k === 'ArrowLeft' && latelyAct >= 0) { e.preventDefault(); latelyGo(latelyRows[latelyAct], 1); }
+    else if (k === 'ArrowRight' && latelyAct >= 0) { e.preventDefault(); latelyGo(latelyRows[latelyAct], -1); }
+    else if (k === 'Escape') setLatelyAct(-1);
   });
 
   /* papers and presentations: search, chip rows (topic, format), year dropdown */
@@ -177,7 +229,8 @@
     if (location.hash === '#search') { q.focus(); try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} }
   }
 
-  /* keyboard shortcuts: 1-7 pages, / search, ? help, j/k cards, c cite, s sort, Esc clear */
+  /* keyboard shortcuts: 1-7 pages, / search (Enter selects the top result), ? help,
+     n/b or down/up step through cards, left/right move along a card's links, c cite, v view, Esc clear */
   (function () {
     var tabs = $$('.tabs a.tab'), dlg = $('#keys'), kbtn = $('#kbtn');
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -187,19 +240,31 @@
       var kc = $('#kclose'); if (kc) kc.addEventListener('click', function () { dlg.close(); });
       dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
     }
+    var cards = function () { return $$('.paper', list || document).filter(function (p) { return !p.hidden && p._vis !== false; }); };
+    var selected = function () { return $('.paper.sel', list || document); };
+    var select = function (c) {
+      var cur = selected(); if (cur) cur.classList.remove('sel');
+      if (document.activeElement && document.activeElement.blur && list && list.contains(document.activeElement)) document.activeElement.blur();
+      if (!c) return;
+      c.classList.add('sel');
+      c.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+    };
+    var move = function (d) {
+      var all = cards(); if (!all.length) return;
+      var cur = selected(), i = cur ? all.indexOf(cur) : -1;
+      select(all[Math.max(0, Math.min(all.length - 1, i < 0 ? (d > 0 ? 0 : all.length - 1) : i + d))]);
+    };
+    var linksOf = function (c) { return $$('.ql a', c); };
+    /* "view": a paper's PDF (else its DOI), a talk's slides (else its video) */
+    var view = function (c) {
+      var ls = linksOf(c), order = ['pdf', 'slides', 'poster', 'doi', 'video'];
+      for (var i = 0; i < order.length; i++) { var a = ls.filter(function (x) { return x.getAttribute('data-k') === order[i]; })[0]; if (a) { a.click(); return; } }
+    };
     var sq = $('#q');
     if (sq) sq.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') { e.preventDefault(); sq.value = ''; sq.dispatchEvent(new Event('input')); sq.blur(); }
+      else if (e.key === 'Enter') { var first = cards()[0]; if (first) { e.preventDefault(); sq.blur(); select(first); } }
     });
-    var cards = function () { return $$('.paper:not([hidden])', list || document); };
-    var move = function (d) {
-      var all = cards(); if (!all.length) return;
-      var cur = $('.paper.sel', list), i = cur ? all.indexOf(cur) : -1;
-      if (cur) cur.classList.remove('sel');
-      var next = all[Math.max(0, Math.min(all.length - 1, i < 0 ? (d > 0 ? 0 : all.length - 1) : i + d))];
-      next.classList.add('sel');
-      next.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
-    };
     document.addEventListener('keydown', function (e) {
       if (e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented) return;
       var t = e.target, tn = t && t.tagName;
@@ -215,15 +280,23 @@
         if (sq) { sq.focus(); sq.select(); }
         else { var pt = tabs.filter(function (a) { return /(^|\/)papers\/(index\.html)?$/.test(a.getAttribute('href')); })[0]; if (pt) location.href = pt.getAttribute('href') + '#search'; }
       } else if (k === '?') { e.preventDefault(); openKeys(); }
-      else if (list && k === 'j') move(1);
-      else if (list && k === 'k') move(-1);
+      else if (list && (k === 'n' || k === 'ArrowDown')) { e.preventDefault(); move(1); }
+      else if (list && ((k === 'b' && kpos < 8) || k === 'ArrowUp')) { e.preventDefault(); move(-1); } /* "b" is part of the Konami code, so it waits while that is mid-entry */
+      else if (list && (k === 'ArrowRight' || k === 'ArrowLeft')) {
+        var cur = selected(); if (!cur) return;
+        var ls = linksOf(cur); if (!ls.length) return;
+        e.preventDefault();
+        var at = ls.indexOf(document.activeElement);
+        ls[k === 'ArrowRight' ? (at < 0 ? 0 : Math.min(ls.length - 1, at + 1)) : (at < 0 ? ls.length - 1 : Math.max(0, at - 1))].focus();
+      }
       else if (list && k === 'c') { var s = $('.paper.sel .cite-btn', list); if (s) s.click(); }
-      else if (list && k === 's') { var sc = $('.chip[data-g="sort"]:not([aria-pressed="true"])'); if (sc) sc.click(); }
+      else if (list && k === 'v') { var vc = selected(); if (vc) view(vc); }
+      else if (list && k === 'Escape') { if (selected()) select(null); }
     });
   })();
 
   /* stickers (the totals in page headers and the badges on cards) flip like a coin when you point at or tap them, then settle */
-  var flipSel = '.stat, .cbadge';
+  var flipSel = '.stat, .cbadge, .sk, .cs, .tl .dt';
   var flip = function (e) {
     var s = e.target.closest && e.target.closest(flipSel);
     if (!s || s.classList.contains('flip') || (e.relatedTarget && s.contains(e.relatedTarget))) return;
@@ -257,7 +330,7 @@
   /* click the period after "make sense" to change its color */
   var dot = $('.dot');
   if (dot) {
-    var dotColors = ['#2457E6', '#FFD43B', '#FF7EB6', '#4CD07D', '#B08CFF', '#FF9F1C', '#FF5A4A', '#121826'], di = 0;
+    var dotColors = ['#121826', '#FF5A4A', '#FF9F1C', '#FFD43B', '#4CD07D', '#4D9BFF', '#B08CFF', '#FF7EB6'], di = 0; /* starts black, then the rainbow, then black again */
     dot.addEventListener('click', function () {
       di = (di + 1) % dotColors.length;
       dot.style.color = dotColors[di];
@@ -265,36 +338,84 @@
     });
   }
 
-  /* Konami code: up up down down left right left right b a  ->  highlighter rain.
-     It stops by itself after about 15 seconds. Click anywhere, press Esc, press "stop",
-     or enter the code again to stop sooner. */
+  /* Konami code: up up down down left right left right b a  ->  tiny colored raindrops that fall, splash,
+     and bounce off your pointer. It stops by itself after about 15 seconds. Click anywhere, press Esc, press "stop",
+     or enter the code again to stop sooner. Settings were tuned by eye: density 900 (scaled to the screen), speed 50, bounce 15, thickness 140. */
   var seq = ['arrowup', 'arrowup', 'arrowdown', 'arrowdown', 'arrowleft', 'arrowright', 'arrowleft', 'arrowright', 'b', 'a'], kpos = 0;
-  var rain = null, spawner = null, ender = null;
+  var rain = null, pill = null, rainEnder = null;
   var stopRain = function () {
-    clearInterval(spawner); clearTimeout(ender); spawner = ender = null;
-    if (!rain) return;
-    var r = rain; rain = null;
-    var pill = $('.rain-stop'); if (pill) pill.remove();
-    setTimeout(function () { r.remove(); }, 6000); /* let the last strokes finish falling */
+    clearTimeout(rainEnder); rainEnder = null;
+    if (pill) { pill.remove(); pill = null; }
+    if (rain) rain.ending = true; /* no new drops; the canvas goes away once the last ones have landed */
   };
   var startRain = function () {
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    if (rain) { stopRain(); return; }
-    var colors = ['#FF5A4A', '#FF9F1C', '#FFD43B', '#4CD07D', '#4D9BFF', '#B08CFF', '#FF7EB6'];
-    rain = document.createElement('div'); rain.className = 'rain'; rain.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(rain);
-    var pill = document.createElement('button'); pill.type = 'button'; pill.className = 'rain-stop'; pill.textContent = 'stop the rain (esc)';
+    if (rain && !rain.ending) { stopRain(); return; }
+    if (rain) return;
+    var cv = document.createElement('canvas'); cv.id = 'rain-cv'; cv.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(cv);
+    var cx = cv.getContext('2d'), W = 0, H = 0;
+    var COLORS = ['#FF5A4A', '#FF9F1C', '#FFD43B', '#4CD07D', '#4D9BFF', '#B08CFF', '#FF7EB6'];
+    var drops = [], spl = [], acc = 0, last = performance.now(), raf = 0;
+    var P = { x: -999, y: -999, vx: 0, vy: 0, on: false, lx: 0, ly: 0, lt: 0 }, R = 30;
+    var SPEED = 0.5, BOUNCE = 0.15, THICK = 1.4;
+    var size = function () { var dpr = Math.min(2, window.devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; cx.setTransform(dpr, 0, 0, dpr, 0, 0); };
+    size();
+    var onResize = size, onMove = function (e) {
+      var t = performance.now(), dt = Math.max(8, t - P.lt) / 1000;
+      P.vx = P.vx * .6 + ((e.clientX - P.lx) / dt) * .4; P.vy = P.vy * .6 + ((e.clientY - P.ly) / dt) * .4;
+      P.x = P.lx = e.clientX; P.y = P.ly = e.clientY; P.lt = t; P.on = true;
+    }, onLeave = function () { P.on = false; }, onUp = function (e) { if (e.pointerType !== 'mouse') P.on = false; };
+    addEventListener('resize', onResize); addEventListener('pointermove', onMove); document.addEventListener('mouseleave', onLeave); addEventListener('pointerup', onUp);
+    rain = { ending: false };
+    pill = document.createElement('button'); pill.type = 'button'; pill.className = 'rain-stop'; pill.textContent = 'stop the rain (esc)';
     pill.addEventListener('click', function (e) { e.stopPropagation(); stopRain(); });
     document.body.appendChild(pill);
-    var drop = function () {
-      var el = document.createElement('i'), w = 36 + Math.random() * 70;
-      el.style.cssText = '--c:' + colors[Math.floor(Math.random() * colors.length)] + ';--w:' + w + 'px;--h:' + (11 + Math.random() * 7) + 'px;left:' + (Math.random() * 100) + 'vw;--t:' + (2.6 + Math.random() * 2.6) + 's;--r0:' + (Math.random() * 40 - 20) + 'deg;--r1:' + (Math.random() * 120 - 60) + 'deg';
-      el.addEventListener('animationend', function () { el.remove(); });
-      rain.appendChild(el);
+    var teardown = function () {
+      cancelAnimationFrame(raf); cv.remove(); rain = null;
+      removeEventListener('resize', onResize); removeEventListener('pointermove', onMove); document.removeEventListener('mouseleave', onLeave); removeEventListener('pointerup', onUp);
     };
-    for (var n = 0; n < 14; n++) drop();
-    spawner = setInterval(drop, 110);
-    ender = setTimeout(stopRain, 15000);
+    var step = function (now) {
+      var dt = Math.min(.035, (now - last) / 1000 || .016); last = now;
+      var g = 1500 * SPEED, term = 1250 * SPEED;
+      if (!rain.ending) {
+        acc += 900 * Math.min(1.4, Math.max(.3, W / 1440)) * dt; /* fewer drops on a phone, so it stays smooth */
+        var n = acc | 0; acc -= n;
+        for (var i = 0; i < n && drops.length < 2400; i++) drops.push({ x: Math.random() * (W + 120) - 60, y: -20 - Math.random() * 40, vx: 0, vy: (500 + Math.random() * 350) * SPEED, len: 7 + Math.random() * 9, w: (1.6 + Math.random() * 1.4) * THICK, c: COLORS[(Math.random() * 7) | 0] });
+      }
+      P.vx *= .9; P.vy *= .9;
+      cx.clearRect(0, 0, W, H); cx.lineCap = 'round';
+      for (var j = drops.length - 1; j >= 0; j--) {
+        var d = drops[j];
+        d.vy += g * dt; var sv = Math.hypot(d.vx, d.vy); if (sv > term) { d.vx *= term / sv; d.vy *= term / sv; }
+        d.vx *= 1 - .7 * dt; d.x += d.vx * dt; d.y += d.vy * dt;
+        if (P.on) {
+          var dx = d.x - P.x, dy = d.y - P.y, r = R + d.w, d2 = dx * dx + dy * dy;
+          if (d2 < r * r) {
+            var dd = Math.sqrt(d2) || 1, nx = dx / dd, ny = dy / dd; d.x = P.x + nx * r; d.y = P.y + ny * r;
+            var rvx = d.vx - P.vx * .5, rvy = d.vy - P.vy * .5, vn = rvx * nx + rvy * ny;
+            if (vn < 0) { d.vx -= (1 + BOUNCE) * vn * nx; d.vy -= (1 + BOUNCE) * vn * ny; d.vx += P.vx * .28 + (Math.random() - .5) * 60; d.vy += P.vy * .28; }
+          }
+        }
+        if (d.y > H - 1 || d.x < -80 || d.x > W + 80) {
+          if (d.y > H - 1 && spl.length < 700) for (var k = 0; k < 3; k++) spl.push({ x: d.x, y: H - 1, vx: (Math.random() - .5) * 160, vy: -(90 + Math.random() * 190), c: d.c, l: .34 + Math.random() * .2, r: d.w * .6 });
+          drops[j] = drops[drops.length - 1]; drops.pop(); continue;
+        }
+        var sl = Math.hypot(d.vx, d.vy) || 1;
+        cx.strokeStyle = d.c; cx.lineWidth = d.w; cx.globalAlpha = .95; cx.beginPath(); cx.moveTo(d.x, d.y); cx.lineTo(d.x - d.vx / sl * d.len, d.y - d.vy / sl * d.len); cx.stroke();
+      }
+      for (var m = spl.length - 1; m >= 0; m--) {
+        var s = spl[m]; s.l -= dt;
+        if (s.l <= 0) { spl[m] = spl[spl.length - 1]; spl.pop(); continue; }
+        s.vy += 1300 * dt; s.x += s.vx * dt; s.y += s.vy * dt; if (s.y > H - 1) { s.y = H - 1; s.vy *= -.3; }
+        cx.globalAlpha = Math.min(1, s.l * 3.5); cx.fillStyle = s.c; cx.beginPath(); cx.arc(s.x, s.y, s.r, 0, 6.3); cx.fill();
+      }
+      cx.globalAlpha = 1;
+      if (rain.ending && !drops.length && !spl.length) { teardown(); return; }
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    rainEnder = setTimeout(stopRain, 15000);
   };
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') { stopRain(); return; }
@@ -304,7 +425,7 @@
     if (k === seq[kpos]) { kpos++; if (kpos === seq.length) { kpos = 0; startRain(); } }
     else kpos = (k === seq[0]) ? 1 : 0;
   });
-  document.addEventListener('click', function () { if (rain) stopRain(); });
+  document.addEventListener('click', function () { if (rain && !rain.ending) stopRain(); });
 
   /* random 404: blind spot, Stroop, Müller-Lyer */
   var nf = $('#nf');

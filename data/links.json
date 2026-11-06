@@ -1,22 +1,8 @@
 [
-  {
-    "name": "YouTube",
-    "icon": "youtube",
-    "url": "http://youtube.com/@psychophyshicks"
-  },
-  {
-    "name": "Instagram",
-    "icon": "instagram",
-    "url": "https://www.instagram.com/psychophyshicks/"
-  },
-  {
-    "name": "GitHub",
-    "icon": "github",
-    "url": "https://github.com/jarrodmhicks"
-  },
-  {
-    "name": "Google Scholar",
-    "icon": "scholar",
-    "url": "https://scholar.google.com/citations?user=g7hgXiAAAAAJ&hl=en"
-  }
+  { "name": "YouTube", "icon": "youtube", "url": "http://youtube.com/@psychophyshicks" },
+  { "name": "Instagram", "icon": "instagram", "url": "https://www.instagram.com/psychophyshicks/" },
+  { "name": "TikTok", "icon": "tiktok", "url": "", "soon": true },
+  { "name": "Bluesky", "icon": "bluesky", "url": "", "soon": true },
+  { "name": "Threads", "icon": "threads", "url": "", "soon": true },
+  { "name": "X", "icon": "x", "url": "", "soon": true }
 ]

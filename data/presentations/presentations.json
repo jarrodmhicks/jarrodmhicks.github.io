@@ -1,0 +1,410 @@
+[
+ {
+  "title": "Invariant correlation: a general and straightforward method to quantify invariance in time-varying neural signals",
+  "type": "talk",
+  "venue": "Computational Cognitive Neuroscience",
+  "city": "New York, New York",
+  "date": "2026-08",
+  "conference": true,
+  "authors": [
+    "Jarrod M. Hicks",
+    "Dana Boebinger",
+    "Kirill V Nourski",
+    "Matthew A. Howard",
+    "Christopher M. Garcia",
+    "Thomas Wychowski",
+    "Webster Pilcher",
+    "Sam V. Norman-Haignere"
+  ],
+  "topics": [
+      "hearing",
+      "neural methods"
+    ],
+  "links": {
+    "video": "https://www.youtube.com/watch?v=PavZ9EBEcV8"
+  }
+ },
+
+ {
+  "title": "Invariant correlation: a general and straightforward method to quantify invariance in time-varying neural signals",
+  "type": "poster",
+  "venue": "Computational Cognitive Neuroscience (CCN)",
+  "city": "New York, New York",
+  "date": "2026-08",
+  "conference": true,
+  "authors": [
+    "Jarrod M. Hicks",
+    "Dana Boebinger",
+    "Kirill V Nourski",
+    "Matthew A. Howard",
+    "Christopher M. Garcia",
+    "Thomas Wychowski",
+    "Webster Pilcher",
+    "Sam V. Norman-Haignere"
+  ],
+  "topics": [
+      "hearing",
+      "neural methods"
+    ],
+  "links": {
+    "pdf": "https://www.youtube.com/watch?v=PavZ9EBEcV8"
+  }
+ },
+
+ {
+  "title": "The role of texture in auditory scene analysis",
+  "type": "talk",
+  "venue": "Purdue Seminars in Hearing Research",
+  "city": "Online",
+  "date": "2026-02",
+  "conference": false,
+  "authors": [
+      "Jarrod M. Hicks",
+      "Josh H. McDermott"
+    ],
+    "topics": [
+      "hearing"
+    ],
+  "links": {
+  }
+ },
+
+{
+  "title": "Texture streaming in auditory scenes",
+  "type": "poster",
+  "venue": "Association for Research in Otolaryngology (ARO)",
+  "city": "Orlando, FL",
+  "date": "2025-02",
+  "conference": true,
+  "authors": [
+      "Jarrod M. Hicks",
+      "Josh H. McDermott"
+    ],
+    "topics": [
+      "hearing"
+    ],
+  "links": {
+    "pdf": "/assets/hicks-2025-aro-texturestreaming.pdf"
+  }
+ }, 
+
+ {
+  "title": "Discovering the perceptual space of natural sounds from similarity judgments",
+  "type": "poster",
+  "venue": "Cognitive Computational Neuroscience (CCN)",
+  "city": "Cambridge, MA",
+  "date": "2024-08",
+  "conference": true,
+  "authors": [
+      "Jarrod M. Hicks",
+      "Bryan J. Medina",
+      "Josh H. McDermott"
+    ],
+    "topics": [
+      "hearing"
+    ],
+  "links": {
+    "pdf": "/assets/hicks-2024-ccn-texturesimilarity.pdf"
+  }
+ },
+
+ {
+  "title": "Noise Schemas Aid Hearing in Noise",
+  "type": "poster",
+  "venue": "Association for Research in Otolaryngology (ARO)",
+  "city": "Anaheim, CA",
+  "date": "2024-02",
+  "conference": true,
+  "authors": [
+      "Jarrod M. Hicks",
+      "Josh H. McDermott"
+    ],
+    "topics": [
+      "hearing"
+    ],
+  "links": {
+    "pdf": "/assets/hicks-2024-aro-hearinginnoise.pdf"
+  }
+ },
+
+ {
+  "title": "Noise Schemas Aid Hearing in Noise",
+  "type": "poster",
+  "venue": "Advances and Perspectives in Auditory Neuroscience (APAN)",
+  "city": "Washington, DC",
+  "date": "2023-11",
+  "conference": true,
+  "authors": [
+      "Jarrod M. Hicks",
+      "Josh H. McDermott"
+    ],
+    "topics": [
+      "hearing"
+    ],
+  "links": {
+    "pdf": "/assets/hicks-2023-apan-hearinginnoise.pdf"
+  }
+ },
+
+ {
+  "title": "Streaming Sound Texture in Auditory Scenes",
+  "type": "poster",
+  "venue": "Association for Research in Otolaryngology (ARO)",
+  "city": "Orlando, FL",
+  "date": "2023-02",
+  "conference": true,
+  "authors": [
+      "Jarrod M. Hicks",
+      "Josh H. McDermott"
+    ],
+    "topics": [
+      "hearing"
+    ],
+  "links": {
+    "pdf": "/assets/hicks-2023-aro-texturestreaming.pdf"
+  }
+ },
+
+ {
+  "title": "Streaming Sound Texture in Auditory Scenes",
+  "type": "poster",
+  "venue": "Auditory Perception, Cognition, and Action Meeting (APCAM)",
+  "city": "Boston, MA",
+  "date": "2022-11",
+  "conference": true,
+  "authors": [
+      "Jarrod M. Hicks",
+      "Josh H. McDermott"
+    ],
+    "topics": [
+      "hearing"
+    ],
+  "links": {
+    "pdf": "/assets/hicks-2023-aro-texturestreaming.pdf"
+  }
+ },
+
+ {
+  "title": "Streaming Sound Texture in Auditory Scenes",
+  "type": "poster",
+  "venue": "Advances and Perspectives in Auditory Neuroscience (APAN)",
+  "city": "San Diego, CA",
+  "date": "2022-11",
+  "conference": true,
+  "authors": [
+      "Jarrod M. Hicks",
+      "Josh H. McDermott"
+    ],
+    "topics": [
+      "hearing"
+    ],
+  "links": {
+    "pdf": "/assets/hicks-2022-apan-texturestreaming.pdf"
+  }
+ },
+
+ {
+  "title": "Segregation from Background Noise as Outlier Detection",
+  "type": "poster",
+  "venue": "Association for Research in Otolaryngology (ARO)",
+  "city": "Online",
+  "date": "2021-02",
+  "conference": true,
+  "authors": [
+      "Jarrod M. Hicks",
+      "Josh H. McDermott"
+    ],
+    "topics": [
+      "hearing"
+    ],
+  "links": {
+    "pdf": "/assets/hicks-2021-aro-outlierdetection.pdf"
+  }
+ },
+
+ {
+  "title": "Segregation from Noise as Outlier Detection",
+  "type": "poster",
+  "venue": "Association for Research in Otolaryngology (ARO)",
+  "city": "San Jose, CA",
+  "date": "2020-01",
+  "conference": true,
+  "authors": [
+      "Jarrod M. Hicks",
+      "Josh H. McDermott"
+    ],
+    "topics": [
+      "hearing"
+    ],
+  "links": {
+    "pdf": "/assets/hicks-2020-aro-outlierdetection.pdf"
+  }
+ },
+
+ {
+  "title": "Training the Aging Brain: A Multi-Level Network Analysis",
+  "type": "poster",
+  "venue": "Society for Neuroscience (SfN)",
+  "city": "San Diego, CA",
+  "date": "2016-11",
+  "conference": true,
+  "authors": [
+      "Jarrod M. Hicks",
+      "Rodolphe Nenert",
+      "Lesley A. Ross",      
+      "Kristina M. Visscher"
+    ],
+    "topics": [
+      "aging & vision"
+    ],
+  "links": {
+  }
+ },
+
+ {
+  "title": "Characterizing Variability of Natural Auditory Scenes",
+  "type": "poster",
+  "venue": "MIT Amgen Scholars Program Symposium",
+  "city": "Cambridge, MA",
+  "date": "2016-08",
+  "conference": true,
+  "authors": [
+      "Jarrod M. Hicks",
+      "Wiktor Młynarski",
+      "Josh H. McDermott"
+    ],
+    "topics": [
+      "hearing"
+    ],
+  "links": {
+  }
+ },
+
+ {
+  "title": "Data-Driven Method to Define Brain Regions for Use in fMRI Analyses",
+  "type": "poster",
+  "venue": "National Conference on Undergraduate Research (NCUR)",
+  "city": "Asheville, NC",
+  "date": "2016-04",
+  "conference": true,
+  "authors": [
+      "Jarrod M. Hicks",
+      "Rodolphe Nenert",
+      "Lesley A. Ross", 
+      "Kristina M. Visscher"
+    ],
+    "topics": [
+      "aging & vision"
+    ],
+  "links": {
+  }
+ },
+
+ {
+  "title": "White Matter Hyperintensity Volume Relates to Motor Function, Not Response to CI Therapy in Adults with Chronic Stroke",
+  "type": "poster",
+  "venue": "John W. P. Ost Undergraduate Research Competition",
+  "city": "Birmingham, AL",
+  "date": "2013-05",
+  "conference": true,
+  "authors": [
+      "Jarrod M. Hicks",
+      "Tyler Rickards",
+      "Victor W. Mark",
+      "Gitendra Uswatte",
+      "Edward Taub"
+    ],
+    "topics": [
+      "stroke & rehab"
+    ],
+  "links": {
+  }
+ },
+
+ {
+  "title": "Segregation from Noise as Outlier Detection",
+  "type": "talk",
+  "venue": "MIT Brain & Cognitive Sciences Cog Lunch Seminar Series",
+  "city": "Cambridge, MA",
+  "date": "2019-10",
+  "conference": false,
+  "authors": [
+      "Jarrod M. Hicks",
+      "Josh H. McDermott"
+    ],
+    "topics": [
+      "hearing"
+    ],
+  "links": {
+  }
+ },
+
+ {
+  "title": "Segregation from Noise as Outlier Detection",
+  "type": "talk",
+  "venue": "MIT Brain & Cognitive Sciences Cog Lunch Seminar Series",
+  "city": "Cambridge, MA",
+  "date": "2018-11",
+  "conference": false,
+  "authors": [
+      "Jarrod M. Hicks",
+      "Josh H. McDermott"
+    ],
+    "topics": [
+      "hearing"
+    ],
+  "links": {
+  }
+ },
+
+ {
+  "title": "Open Discussion: 'Contributions and Challenges for Network Models in Cognitive Neuroscience.'",
+  "type": "talk",
+  "venue": "UAB Visual Brain Core Seminar Series",
+  "city": "Birmingham, AL",
+  "date": "2015-11",
+  "conference": false,
+  "authors": [
+      "Jarrod M. Hicks"
+    ],
+    "topics": [
+      "hearing"
+    ],
+  "links": {
+  }
+ },
+
+ {
+  "title": "Perceiving the World Around Us'",
+  "type": "talk",
+  "venue": "Decoding the Brain Event at the Cambridge Science Festival",
+  "city": "Cambridge, MA",
+  "date": "2022-10",
+  "conference": false,
+  "authors": [
+      "Jarrod M. Hicks"
+    ],
+    "topics": [
+      "hearing"
+    ],
+  "links": {
+  }
+ },
+
+ {
+  "title": "Perceiving the World Around Us'",
+  "type": "talk",
+  "venue": "Taste of Science Boston",
+  "city": "Boston, MA",
+  "date": "2019-04",
+  "conference": false,
+  "authors": [
+      "Jarrod M. Hicks"
+    ],
+    "topics": [
+      "hearing"
+    ],
+  "links": {
+  }
+ }
+]
