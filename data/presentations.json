@@ -51,7 +51,7 @@
       "intracranial EEG"
     ],
   "links": {
-    "poster": "https://www.youtube.com/watch?v=PavZ9EBEcV8"
+    "poster": "/assets/presentations/hicks-boebinger-2026-ccn-invariantcorrelation.pdf"
   }
  },
 
@@ -457,6 +457,62 @@
       "illusions"
     ],
   "links": {
+  }
+ },
+
+ {
+  "title": "Invariant correlation: a general and straightforward method to quantify invariance in time-varying neural signals",
+  "type": "poster",
+  "venue": "Advances and Perspectives in Auditory Neuroscience (APAN)",
+  "city": "Washington, DC",
+  "date": "2026-11-13",
+  "conference": true,
+  "authors": [
+    "Jarrod M. Hicks",
+    "Dana Boebinger",
+    "Kirill V Nourski",
+    "Matthew A. Howard",
+    "Christopher M. Garcia",
+    "Thomas Wychowski",
+    "Webster Pilcher",
+    "Sam V. Norman-Haignere"
+  ],
+  "topics": [
+      "hearing",
+      "methods",
+      "computational modeling",
+      "intracranial EEG"
+    ],
+  "links": {
+    "poster": "/assets/presentations/hicks-boebinger-2026-apan-invariant-correlation.pdf"
+  }
+ },
+
+ {
+  "title": "Invariant correlation: a general and straightforward method to quantify invariance in time-varying neural signals",
+  "type": "poster",
+  "venue": "Society for Neuroscience (SfN)",
+  "city": "Washington, DC",
+  "date": "2026-11-18",
+  "conference": true,
+  "authors": [
+    "Jarrod M. Hicks",
+    "Dana Boebinger",
+    "Kirill V Nourski",
+    "Matthew A. Howard",
+    "Christopher M. Garcia",
+    "Thomas Wychowski",
+    "Webster Pilcher",
+    "Sam V. Norman-Haignere"
+  ],
+  "topics": [
+      "hearing",
+      "methods",
+      "computational modeling",
+      "intracranial EEG"
+    ],
+  "links": {
+    "poster": "/assets/presentations/hicks-boebinger-2026-apan-invariant-correlation.pdf"
   }
  }
 ]
