@@ -179,6 +179,8 @@ dialog#keys .kfoot{font:400 11.5px var(--f-mono);color:var(--mute);margin:16px 0
 .meta{font-size:14px;color:var(--mute);margin:2px 0 10px;max-width:none;display:grid;gap:7px}
 .meta b{color:var(--ink);font-weight:600}
 .meta .au{line-height:1.45}
+.meta .eq{font-size:.9em;margin-left:1px;color:var(--ink)}
+.meta .eqn{display:block;font:400 12px var(--f-mono);color:var(--mute);margin-top:3px}
 /* where it appeared: set apart from the authors by a rule in the page color, venue first, then city or volume in mono */
 .meta .vb{display:grid;gap:1px;border-left:3px solid var(--pc);padding-left:10px}
 .meta .ven{color:var(--ink);font-weight:500;line-height:1.35}

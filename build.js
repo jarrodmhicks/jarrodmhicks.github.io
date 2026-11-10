@@ -80,7 +80,8 @@ const papers = readFolder('data/papers').map(({ file, data }) => {
 
 
 /* ---------- papers from .bib files: paste what Google Scholar gives you ---------- */
-const BIB_EXTRA = ['topics', 'pdf', 'code', 'data', 'status', 'citations', 'new'];
+const BIB_EXTRA = ['topics', 'pdf', 'code', 'data', 'status', 'citations', 'new', 'equal'];
+const NUM_WORD = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
 const ACC = { "'": '́', '`': '̀', '"': '̈', '^': '̂', '~': '̃' };
 const tex = s => s.replace(/\\(['`"^~])\s*\{?\\?([a-zA-Z])\}?/g, (m, a, c) => (c + ACC[a]).normalize('NFC'))
   .replace(/\\([&%$#_])/g, '$1').replace(/[{}]/g, '').replace(/\s+/g, ' ').trim();
@@ -130,7 +131,9 @@ function bibToPaper(e) {
   const kind = ['article', 'inproceedings', 'phdthesis'].includes(e.type) ? e.type : 'article';
   const venue = g('journal') || g('booktitle') || g('school') || g('publisher') || g('howpublished') || g('series');
   const topicsList = g('topics').split(/[,;]/).map(s => s.trim()).filter(Boolean);
-  const kept = e.order.filter(k => !BIB_EXTRA.includes(k)).map(k => `  ${k} = {${f[k].trim()}}`).join(',\n');
+  const equal = g('equal') ? parseInt(g('equal'), 10) : 0; /* equal = {2}: the first two authors contributed equally */
+  const kept = e.order.filter(k => !BIB_EXTRA.includes(k)).map(k => `  ${k} = {${f[k].trim()}}`).join(',\n')
+    + (equal > 1 && equal <= 10 && f.note === undefined ? `,\n  note = {The first ${NUM_WORD[equal]} authors contributed equally}` : '');
   const doi = g('doi').replace(/^https?:\/\/(dx\.)?doi\.org\//i, '');
   const p = {
     title: g('title'), authors: f.author ? bibAuthors(f.author) : [], venue, year: parseInt(g('year'), 10), topics: topicsList,
@@ -140,6 +143,10 @@ function bibToPaper(e) {
     bibtype: kind, bibraw: `@${e.type}{${e.key},\n${kept}\n}`
   };
   if (g('citations')) p.citations = parseInt(g('citations'), 10);
+  if (g('equal')) {
+    if (Number.isInteger(equal) && equal > 1 && equal <= Math.min(10, p.authors.length)) p.equal = equal;
+    else errors.push(`${tag}: "equal" should be how many of the first authors contributed equally, like  equal = {2}  (and no more than the number of authors)`);
+  }
   const mo = monthNum(g('month')); if (mo) p.month = mo;
   if (/^(true|false)$/i.test(g('new'))) p.new = g('new').toLowerCase() === 'true';
   need(tag, p, 'title'); need(tag, p, 'authors', v => v.length > 0, 'an author field');
@@ -402,7 +409,7 @@ const topicColor = id => (topics.find(t => t.id === id) || { color: '#cccccc' })
 const years = [...new Set(papers.map(p => p.year))].sort((a, b) => b - a);
 const lastOf = a => a.trim().split(/\s+/).pop().toLowerCase();
 const isMe = a => lastOf(a) === lastOf(site.me) && a.trim().charAt(0).toLowerCase() === site.me.trim().charAt(0).toLowerCase(); /* "J. M. Hicks" and "Jarrod M. Hicks" both match */
-function authorsHTML(p) { return p.authors.map(a => isMe(a) ? `<b>${esc(a)}</b>` : esc(a)).join(', '); }
+function authorsHTML(p) { return p.authors.map((a, i) => (isMe(a) ? `<b>${esc(a)}</b>` : esc(a)) + (i < (p.equal || 0) ? '<sup class="eq">*</sup>' : '')).join(', '); }
 /* "new" sticker: shown on a paper that has no citation badge yet and is recent.
    With a month (month = {oct} in the .bib, or "month": 10 in a JSON file) it means published within the last 7 months.
    With only a year it means "this calendar year". Override either way with  new = {true}  or  new = {false}  (JSON: "new": true / false). */
@@ -426,7 +433,7 @@ function paperHTML(p) {
   return `      <article class="paper${badge ? ' hc' : ''}" data-cites="${p.citations || 0}" style="--tc:${topicColor([...p.topics].sort(byName)[0])}" data-year="${p.year}" data-topics="${esc(p.topics.join('|'))}" data-text="${esc(text)}">
         ${badge}<span class="yrm">${p.year}</span>
         <h3>${esc(p.title)}</h3>
-        <p class="meta"><span class="au">${authorsHTML(p)}</span><span class="vb"><span class="ven">${esc(p.venue)}</span>${vol ? `<span class="loc">${esc(vol)}</span>` : ''}</span></p>${quiet ? `\n        <p class="ql">${quiet}</p>` : ''}
+        <p class="meta"><span class="au">${authorsHTML(p)}${p.equal ? '<span class="eqn">* denotes equal contribution</span>' : ''}</span><span class="vb"><span class="ven">${esc(p.venue)}</span>${vol ? `<span class="loc">${esc(vol)}</span>` : ''}</span></p>${quiet ? `\n        <p class="ql">${quiet}</p>` : ''}
         <div class="pb"><div class="pl">${tagsHTML}</div><button type="button" class="tag cite-btn" aria-expanded="false">cite</button></div>
         <div class="cw"><div class="cwi"><div class="cite"><pre>${esc(bib)}</pre><div class="cite-actions"><button type="button" class="tag" data-copy="${esc(bib)}">copy BibTeX</button><button type="button" class="tag" data-copy="${esc(cite)}">copy citation</button></div></div></div></div>
       </article>`;
