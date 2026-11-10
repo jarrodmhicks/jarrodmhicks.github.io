@@ -68,6 +68,11 @@ p{max-width:66ch}
 .p-lan svg{display:block;width:100%;height:auto;margin-bottom:-30px;position:relative;z-index:2;-webkit-mask-image:linear-gradient(transparent,#000 20%);mask-image:linear-gradient(transparent,#000 20%)}
 @keyframes swing{0%,100%{transform:rotate(-1.8deg)}50%{transform:rotate(1.8deg)}}
 @media(prefers-reduced-motion:reduce){.p-lan{animation:none}}
+/* the badge can be grabbed and swung (see the badge block in site.js) */
+.p-lan{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.p-lan.dr{animation:none;cursor:grabbing}
+.p-lan .piv{position:absolute;left:50%;top:0;width:0;height:0}
+.p-lan{position:relative}
 .p-badge{width:100%;border:3px solid var(--ink);border-radius:22px;background:var(--bg);padding:34px 14px 16px;position:relative;text-align:center}
 .p-badge:before{content:'';position:absolute;top:12px;left:50%;width:46px;height:10px;margin-left:-23px;border:3px solid var(--ink);border-radius:999px;background:var(--grid)}
 .p-badge img{display:block;width:100%;height:auto;aspect-ratio:1;object-fit:cover;object-position:50% 14%;border:3px solid var(--ink);border-radius:16px}
@@ -115,8 +120,28 @@ input[type=search]:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3
 input[type=search]{width:100%;font:400 14px var(--f-mono);color:var(--ink);background:var(--soft);border:2px solid var(--ink);border-radius:12px;padding:10px 14px}
 .count{font:400 12px var(--f-mono);color:var(--mute);margin-top:6px}
 /* search box with a "/" key hint, and the shortcuts dialog */
-.sbox{position:relative}
-.sbox input[type=search]{padding-right:44px}
+.sbox{position:relative;display:flex;flex-wrap:wrap;align-items:center;gap:6px;background:var(--soft);border:2px solid var(--ink);border-radius:12px;padding:5px 12px 5px 8px;cursor:text;scroll-margin-top:16px}
+.sbox:focus-within{box-shadow:0 0 0 3px #D5D9E1}
+.sbox input[type=search],.sbox input[type=search]:focus{flex:1 1 150px;width:auto;min-width:0;border:0;border-radius:0;background:transparent;box-shadow:none;padding:5px 36px 5px 6px}
+.sbox.has input[type=search]{padding-right:6px}
+/* filters you pick from a card show up as chips inside the search box */
+.tok{display:inline-flex;align-items:center;gap:6px;font:500 12px var(--f-mono);color:#111;background:color-mix(in srgb,var(--c,var(--pc)) 55%,#fff);border:1.5px solid var(--ink);border-radius:999px;padding:1px 3px 1px 10px;box-shadow:1.5px 1.5px 0 var(--ink);max-width:100%}
+.tok b{font:500 9.5px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;opacity:.65}
+.tok .v{min-width:0;max-width:26ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tok button{font:700 11px/1 var(--f-mono);width:20px;height:20px;flex:none;border-radius:50%;border:0;background:transparent;color:#111;cursor:pointer;display:grid;place-items:center;padding:0}
+.tok button:hover,.tok button:focus-visible{background:#111;color:#fff;outline:none}
+.sclr{font:500 11px var(--f-mono);color:var(--ink);background:transparent;border:1.5px solid var(--ink);border-radius:999px;padding:0 10px;line-height:1.7;cursor:pointer;margin-left:auto}
+.sclr:hover{background:var(--ink);color:var(--bg)}
+.sclr[hidden]{display:none}
+#nclr{margin-left:6px;cursor:pointer}
+/* clickable fields on a card */
+.fl:not(.tag){font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;text-align:left;cursor:pointer;border-radius:4px}
+.fl:not(.tag):hover{text-decoration:underline dotted;text-underline-offset:3px}
+.fl:not(.tag):focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.fl:not(.tag).on{background:color-mix(in srgb,var(--pc) 45%,transparent);box-shadow:0 0 0 2px color-mix(in srgb,var(--pc) 45%,transparent);color:var(--ink)}
+.tag.t.fl{cursor:pointer;transition:transform .1s,box-shadow .1s}
+.tag.t.fl:hover{background:var(--c);color:#111;transform:translate(-1px,-1px);box-shadow:2.5px 2.5px 0 var(--ink)}
+.tag.t.fl.on{transform:translate(-1px,-1px);box-shadow:2.5px 2.5px 0 var(--ink);outline:2px solid var(--ink);outline-offset:1px}
 kbd{font:600 11px var(--f-mono);color:var(--ink);background:var(--bg);border:1.5px solid var(--ink);border-radius:6px;padding:1px 6px;box-shadow:1.5px 1.5px 0 var(--ink);white-space:nowrap}
 .sbox kbd{position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none}
 .sbox:focus-within kbd,.sbox.has kbd{display:none}

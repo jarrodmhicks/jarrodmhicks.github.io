@@ -158,7 +158,7 @@
   var list = $('#plist') || $('#tlist');
   if (list) {
     var papers = $$('.paper', list), groups = $$('.ygrp', list);
-    var state = { q: '', topic: [], type: '', year: '', sort: 'year' }; /* topic is a list: a card has to carry every topic you picked */
+    var state = { q: '', topic: [], author: [], venue: '', type: '', year: '', sort: 'year' }; /* topic is a list: a card has to carry every topic you picked */
     var order = papers.slice();
     var q = $('#q'), count = $('#cnt'), none = $('#none');
     var yb = $('#yb'), yl = $('#yl');
@@ -188,7 +188,10 @@
       var shown = 0, terms = state.q.toLowerCase().split(/\s+/).filter(Boolean), fancy = !firstRun && !reduce && !!document.body.animate;
       papers.forEach(function (p) {
         var have = (p.getAttribute('data-topics') || '').split('|');
+        var by = (p.getAttribute('data-authors') || '').split('|');
         var ok = state.topic.every(function (t) { return have.indexOf(t) > -1; }) &&
+                 state.author.every(function (a) { return by.indexOf(a) > -1; }) &&
+                 (!state.venue || p.getAttribute('data-venue') === state.venue) &&
                  (!state.type || p.getAttribute('data-type') === state.type) &&
                  (!state.year || (state.year === 'upcoming' ? p.getAttribute('data-upcoming') === '1' : p.getAttribute('data-year') === state.year)) &&
                  terms.every(function (t) { return p.getAttribute('data-text').indexOf(t) > -1; });
@@ -213,14 +216,61 @@
         if (any || !fancy) g.hidden = !any; else g._t = setTimeout(function () { g.hidden = true; }, 250);
       });
       none.hidden = shown !== 0;
-      var sbox = q.parentNode; if (sbox && sbox.classList) sbox.classList.toggle('has', !!q.value);
+      /* filters picked on cards (and the topic and year chosen above) show as chips inside the search box */
+      var sbox = q.parentNode, toks = [];
+      state.author.forEach(function (a) { toks.push({ f: 'author', v: a }); });
+      if (state.venue) toks.push({ f: 'venue', v: state.venue });
+      if (state.year) toks.push({ f: 'year', v: state.year });
+      state.topic.forEach(function (t) { toks.push({ f: 'topic', v: t }); });
+      $$('.tok', sbox).forEach(function (t) { t.remove(); });
+      toks.forEach(function (t) {
+        var el = document.createElement('span'), lab = document.createElement('b'), val = document.createElement('span'), x = document.createElement('button');
+        el.className = 'tok'; lab.textContent = t.f; val.className = 'v'; val.textContent = t.v; val.title = t.v;
+        x.type = 'button'; x.textContent = '\u2715'; x.setAttribute('aria-label', 'Remove ' + t.f + ' filter: ' + t.v);
+        x.addEventListener('click', function (e) { e.stopPropagation(); unfilter(t.f, t.v); q.focus(); });
+        if (t.f === 'topic') { var ch = $$('.chip', document).filter(function (c) { return c.getAttribute('data-g') === 'topic' && c.getAttribute('data-v') === t.v; })[0]; if (ch) el.style.setProperty('--c', ch.style.getPropertyValue('--c')); }
+        el.appendChild(lab); el.appendChild(val); el.appendChild(x); sbox.insertBefore(el, q);
+      });
+      q.placeholder = toks.length ? 'search within these' : q.getAttribute('data-ph');
+      sbox.classList.toggle('has', !!(q.value || toks.length));
+      var sc = $('.sclr', sbox); if (sc) sc.hidden = !(q.value || toks.length || state.type);
+      $$('.fl', list).forEach(function (b) {
+        var f = b.getAttribute('data-f'), v = b.getAttribute('data-v');
+        b.classList.toggle('on', Array.isArray(state[f]) ? state[f].indexOf(v) > -1 : state[f] === v);
+      });
       var cur = $('.paper.sel', list); if (cur && !cur._vis) cur.classList.remove('sel');
       $$('.chip').forEach(function (c) { var g = c.getAttribute('data-g'), v = c.getAttribute('data-v') || ''; c.setAttribute('aria-pressed', String(g === 'topic' ? (v ? state.topic.indexOf(v) > -1 : !state.topic.length) : v === state[g])); });
       yb.firstElementChild.textContent = state.year || 'all'; yb.classList.toggle('on', !!state.year);
       $$('button', yl).forEach(function (b) { b.setAttribute('aria-selected', String((b.getAttribute('data-year') || '') === state.year)); });
       firstRun = false;
     };
+    q.setAttribute('data-ph', q.placeholder);
+    var unfilter = function (f, v) {
+      if (Array.isArray(state[f])) { var i = state[f].indexOf(v); if (i > -1) state[f].splice(i, 1); } else state[f] = '';
+      apply();
+    };
+    /* back to everything: text, authors, venue, year, topics and format (the sort order stays) */
+    var clearAll = function () { q.value = ''; state.q = ''; state.topic = []; state.author = []; state.venue = ''; state.year = ''; state.type = ''; apply(); };
+    list.clearFilters = clearAll;
+    list.hasFilters = function () { return !!(state.q || state.topic.length || state.author.length || state.venue || state.year || state.type); };
     q.addEventListener('input', function () { state.q = q.value; apply(); });
+    q.addEventListener('keydown', function (e) { if (e.key === 'Backspace' && !q.value && (state.author.length || state.venue || state.year || state.topic.length)) { /* Backspace on an empty box removes the last chip */
+      e.preventDefault();
+      if (state.topic.length) state.topic.pop(); else if (state.year) state.year = ''; else if (state.venue) state.venue = ''; else state.author.pop();
+      apply();
+    } });
+    var sbx = q.parentNode, scl = $('.sclr', sbx), nc = $('#nclr');
+    if (scl) scl.addEventListener('click', function () { clearAll(); q.focus(); });
+    if (nc) nc.addEventListener('click', clearAll);
+    sbx.addEventListener('click', function (e) { if (e.target === sbx) q.focus(); });
+    /* click an author, venue, year or topic on a card to filter by it; click it again to undo */
+    list.addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('.fl'); if (!b) return;
+      var f = b.getAttribute('data-f'), v = b.getAttribute('data-v');
+      if (Array.isArray(state[f])) { var i = state[f].indexOf(v); if (i > -1) state[f].splice(i, 1); else state[f].push(v); } else state[f] = state[f] === v ? '' : v;
+      apply();
+      if (sbx.getBoundingClientRect().top < 0) sbx.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' }); /* so you can see the chip you just made */
+    });
     $$('.chip').forEach(function (c) { c.addEventListener('click', function () {
       var g = c.getAttribute('data-g'), v = c.getAttribute('data-v') || '';
       if (g === 'topic') { /* topics add up; "all" clears them; unpicking the last one goes back to all */
@@ -274,7 +324,7 @@
     };
     var sq = $('#q');
     if (sq) sq.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') { e.preventDefault(); sq.value = ''; sq.dispatchEvent(new Event('input')); sq.blur(); }
+      if (e.key === 'Escape') { e.preventDefault(); if (list && list.clearFilters) list.clearFilters(); else { sq.value = ''; sq.dispatchEvent(new Event('input')); } sq.blur(); }
       else if (e.key === 'Enter') { var first = cards()[0]; if (first) { e.preventDefault(); sq.blur(); select(first); } }
     });
     document.addEventListener('keydown', function (e) {
@@ -303,7 +353,7 @@
       }
       else if (list && k === 'c') { var s = $('.paper.sel .cite-btn', list); if (s) s.click(); }
       else if (list && k === 'v') { var vc = selected(); if (vc) view(vc); }
-      else if (list && k === 'Escape') { if (selected()) select(null); }
+      else if (list && k === 'Escape') { if (selected()) select(null); else if (list.hasFilters && list.hasFilters()) list.clearFilters(); }
     });
   })();
 
@@ -449,4 +499,50 @@
     ];
     nf.innerHTML = concepts[Math.floor(Math.random() * concepts.length)] + '<p><a class="btn pri" href="/">Back home</a></p>';
   }
+  /* the home badge is a pendulum: drag it, let go, and it swings and settles. A plain tap gives it a push. */
+  (function () {
+    var lan = document.querySelector('.p-lan'), pv = lan && lan.querySelector('.piv');
+    if (!lan || !pv || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+    var K = 7.5, DAMP = 1.3; /* stiffness (a swing takes about 2.3 s) and friction */
+    var th = 0, om = 0, raf = 0, last = 0, drag = null, samples = [];
+    var show = function () { lan.style.transform = 'rotate(' + (th * 180 / Math.PI).toFixed(3) + 'deg)'; };
+    var pivot = function () { var r = pv.getBoundingClientRect(); return { x: r.left, y: r.top }; };
+    var ang = function (e, p) { return Math.atan2(e.clientX - p.x, e.clientY - p.y); };
+    var wrap = function (a) { while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a; };
+    var step = function (t) {
+      var dt = Math.min(0.033, (t - last) / 1000 || 0.016); last = t;
+      om += (-K * Math.sin(th) - DAMP * om) * dt; th += om * dt; show();
+      if (Math.abs(th) < 0.006 && Math.abs(om) < 0.03) { rest(); return; }
+      raf = requestAnimationFrame(step);
+    };
+    var rest = function () { raf = 0; th = 0; om = 0; lan.style.transform = ''; lan.classList.remove('dr'); }; /* back to the slow idle sway */
+    var go = function () { last = performance.now(); if (!raf) raf = requestAnimationFrame(step); };
+    var current = function () { /* the angle the badge is at right now, even in the middle of the idle sway */
+      var m = new DOMMatrix(getComputedStyle(lan).transform); return Math.atan2(m.b, m.a);
+    };
+    lan.addEventListener('pointerdown', function (e) {
+      if (e.button) return;
+      if (raf) { cancelAnimationFrame(raf); raf = 0; } else th = current();
+      var p = pivot(); lan.classList.add('dr'); show();
+      drag = { p: p, a0: ang(e, p), th0: th, x: e.clientX, y: e.clientY, moved: false }; samples = [];
+      lan.setPointerCapture(e.pointerId); e.preventDefault();
+    });
+    lan.addEventListener('pointermove', function (e) {
+      if (!drag) return;
+      if (Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y) > 4) drag.moved = true;
+      if (!drag.moved) return;
+      th = Math.max(-3.05, Math.min(3.05, drag.th0 + wrap(ang(e, drag.p) - drag.a0))); show();
+      samples.push({ t: performance.now(), th: th }); if (samples.length > 8) samples.shift();
+    });
+    var up = function () {
+      if (!drag) return;
+      if (!drag.moved) om = (Math.random() < .5 ? -1 : 1) * 2.6; /* a tap */
+      else {
+        var n = performance.now(), s = samples.filter(function (q) { return n - q.t < 90; });
+        om = s.length > 1 ? Math.max(-14, Math.min(14, (s[s.length - 1].th - s[0].th) / ((s[s.length - 1].t - s[0].t) / 1000))) : 0;
+      }
+      drag = null; go();
+    };
+    lan.addEventListener('pointerup', up); lan.addEventListener('pointercancel', up);
+  })();
 })();

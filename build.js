@@ -250,7 +250,7 @@ const keysDialog = `<dialog id="keys" aria-labelledby="keys-t">
   <dl>
     <div><dt><kbd>1</kbd> to <kbd>${TABS.length}</kbd></dt><dd>jump to a page<div class="pgs">${TABS.map((t, i) => `<span class="pk" style="--c:${t.color}"><b>${i + 1}</b>${t.label}</span>`).join('')}</div></dd></div>
     <div><dt><kbd>/</kbd></dt><dd>search papers and presentations. press <kbd>Enter</kbd> to select the top result</dd></div>
-    <div><dt><kbd>Esc</kbd></dt><dd>clear the search, close a menu or this box</dd></div>
+    <div><dt><kbd>Esc</kbd></dt><dd>clear the search and any filters, close a menu or this box</dd></div>
     <div><dt><kbd>?</kbd></dt><dd>open this box</dd></div>
   </dl>
   <h3>On Papers and Presentations</h3>
@@ -338,7 +338,7 @@ const homeBody = `    <section>
           <p class="sub">${rich(site.intro)}</p>
         </div>
         <div class="pwrap">
-          <div class="p-lan">${LANYARD}<div class="p-badge"><img src="/assets/img/jarrod.jpg" width="800" height="800" alt="Jarrod Hicks smiling, wearing glasses and a black t-shirt"><b>${esc(site.name)}</b><span>${esc(site.eyebrow)}</span><i></i></div></div>
+          <div class="p-lan" title="Go on, give it a swing">${LANYARD}<i class="piv"></i><div class="p-badge"><img src="/assets/img/jarrod.jpg" width="800" height="800" alt="Jarrod Hicks smiling, wearing glasses and a black t-shirt"><b>${esc(site.name)}</b><span>${esc(site.eyebrow)}</span><i></i></div></div>
         </div>
       </div>
     </section>`;
@@ -409,7 +409,11 @@ const topicColor = id => (topics.find(t => t.id === id) || { color: '#cccccc' })
 const years = [...new Set(papers.map(p => p.year))].sort((a, b) => b - a);
 const lastOf = a => a.trim().split(/\s+/).pop().toLowerCase();
 const isMe = a => lastOf(a) === lastOf(site.me) && a.trim().charAt(0).toLowerCase() === site.me.trim().charAt(0).toLowerCase(); /* "J. M. Hicks" and "Jarrod M. Hicks" both match */
-function authorsHTML(p) { return p.authors.map((a, i) => (isMe(a) ? `<b>${esc(a)}</b>` : esc(a)) + (i < (p.equal || 0) ? '<sup class="eq">*</sup>' : '')).join(', '); }
+/* anything on a card you can click to filter by: an author, the venue, the year, a topic */
+const canon = a => isMe(a) ? site.me : a;
+const flBtn = (f, v, label, cls = '') => `<button type="button" class="fl${cls ? ' ' + cls : ''}" data-f="${f}" data-v="${esc(v)}">${esc(label)}</button>`;
+const authList = (as, equal = 0) => as.map((a, i) => flBtn('author', canon(a), a, isMe(a) ? 'me' : '') + (i < equal ? '<sup class="eq">*</sup>' : '')).join(', ');
+function authorsHTML(p) { return authList(p.authors, p.equal || 0); }
 /* "new" sticker: shown on a paper that has no citation badge yet and is recent.
    With a month (month = {oct} in the .bib, or "month": 10 in a JSON file) it means published within the last 7 months.
    With only a year it means "this calendar year". Override either way with  new = {true}  or  new = {false}  (JSON: "new": true / false). */
@@ -425,15 +429,15 @@ function paperHTML(p) {
   const ext = u => `href="${esc(u)}" target="_blank" rel="noopener"`;
   /* one quiet line: doi, then whatever links exist */
   const quiet = [l.doi && `<span>doi: <a data-k="doi" ${ext('https://doi.org/' + l.doi)}>${esc(l.doi)}</a></span>`, l.pdf && `<a data-k="pdf" ${ext(l.pdf)}>PDF</a>`, l.code && `<a data-k="code" ${ext(l.code)}>code</a>`, l.data && `<a data-k="data" ${ext(l.data)}>data</a>`].filter(Boolean).join('<i>·</i>');
-  const tagsHTML = [...p.topics].sort(byName).map(t => `<span class="tag t" style="--c:${topicColor(t)}">${esc(t)}</span>`).join('');
+  const tagsHTML = [...p.topics].sort(byName).map(t => `<button type="button" class="tag t fl" data-f="topic" data-v="${esc(t)}" style="--c:${topicColor(t)}">${esc(t)}</button>`).join('');
   const badge = p.citations > 0 ? `<div class="cbadge" title="${p.citations} citations"><b>${p.citations}</b><span>cited</span></div>`
     : isNewPaper(p) ? `<div class="cbadge fmt new" title="recent paper, no citations yet">new</div>` : '';
   const text = [p.title, p.authors.join(' '), p.venue, p.year].join(' ').toLowerCase();
   const bib = bibtex(p), cite = citation(p);
-  return `      <article class="paper${badge ? ' hc' : ''}" data-cites="${p.citations || 0}" style="--tc:${topicColor([...p.topics].sort(byName)[0])}" data-year="${p.year}" data-topics="${esc(p.topics.join('|'))}" data-text="${esc(text)}">
-        ${badge}<span class="yrm">${p.year}</span>
+  return `      <article class="paper${badge ? ' hc' : ''}" data-cites="${p.citations || 0}" style="--tc:${topicColor([...p.topics].sort(byName)[0])}" data-year="${p.year}" data-authors="${esc(p.authors.map(canon).join('|'))}" data-venue="${esc(p.venue)}" data-topics="${esc(p.topics.join('|'))}" data-text="${esc(text)}">
+        ${badge}<span class="yrm">${flBtn('year', String(p.year), String(p.year))}</span>
         <h3>${esc(p.title)}</h3>
-        <p class="meta"><span class="au">${authorsHTML(p)}${p.equal ? '<span class="eqn">* denotes equal contribution</span>' : ''}</span><span class="vb"><span class="ven">${esc(p.venue)}</span>${vol ? `<span class="loc">${esc(vol)}</span>` : ''}</span></p>${quiet ? `\n        <p class="ql">${quiet}</p>` : ''}
+        <p class="meta"><span class="au">${authorsHTML(p)}${p.equal ? '<span class="eqn">* denotes equal contribution</span>' : ''}</span><span class="vb"><span class="ven">${flBtn('venue', p.venue, p.venue)}</span>${vol ? `<span class="loc">${esc(vol)}</span>` : ''}</span></p>${quiet ? `\n        <p class="ql">${quiet}</p>` : ''}
         <div class="pb"><div class="pl">${tagsHTML}</div><button type="button" class="tag cite-btn" aria-expanded="false">cite</button></div>
         <div class="cw"><div class="cwi"><div class="cite"><pre>${esc(bib)}</pre><div class="cite-actions"><button type="button" class="tag" data-copy="${esc(bib)}">copy BibTeX</button><button type="button" class="tag" data-copy="${esc(cite)}">copy citation</button></div></div></div></div>
       </article>`;
@@ -472,8 +476,8 @@ function paperStats() {
 }
 const papersBody = `    <section>
       ${head('Papers', LEDES.papers, paperStats())}
-      <div class="sbox"><input type="search" id="q" placeholder="search titles, authors, venues" aria-label="Search papers" aria-keyshortcuts="/" autocomplete="off"><kbd aria-hidden="true">/</kbd></div>
-      <p class="shint">Press <kbd>/</kbd> to search, <kbd>Esc</kbd> to clear, and <kbd>?</kbd> for more keyboard shortcuts.</p>
+      <div class="sbox"><input type="search" id="q" placeholder="search titles, authors, venues" aria-label="Search papers" aria-keyshortcuts="/" autocomplete="off"><kbd aria-hidden="true">/</kbd><button type="button" class="sclr" hidden>clear all</button></div>
+      <p class="shint">Press <kbd>/</kbd> to search, <kbd>Esc</kbd> to clear, and <kbd>?</kbd> for more keyboard shortcuts. Click an author, venue, year or topic on a card to filter by it.</p>
       <div class="filters">
         <div class="frow"><span class="flab">Topics</span>${chipRow('topic', topics.filter(t => paperTopicSet.has(t.id)))}</div>
         <div class="frow"><span class="flab">Year</span><div class="dd"><button type="button" class="ddb" id="yb" aria-haspopup="listbox" aria-expanded="false"><span>all</span><span aria-hidden="true">▾</span></button><ul class="ddl" id="yl" role="listbox" hidden><li><button type="button" role="option" data-year="" aria-selected="true">all</button></li>${years.map(y => `<li><button type="button" role="option" data-year="${y}" aria-selected="false">${y}</button></li>`).join('')}</ul></div></div>
@@ -483,7 +487,7 @@ const papersBody = `    <section>
       <div id="plist">
 ${papers.map(paperHTML).join('\n')}
       </div>
-      <p class="count" id="none" hidden>No papers match.</p>
+      <p class="count" id="none" hidden>No papers match. <button type="button" class="tag" id="nclr">clear all</button></p>
     </section>`;
 
 /* ---------- presentations ---------- */
@@ -491,13 +495,13 @@ function presHTML(t) {
   const [y, m] = t.date.split('-');
   const l = t.links || {}, up = isUpcoming(t), authors = t.authors && t.authors.length ? t.authors : [site.me], tps = [...(t.topics || [])].sort(byName);
   const quiet = LINK_KEYS.filter(k => l[k]).map(k => `<a data-k="${k}" href="${esc(l[k])}" target="_blank" rel="noopener">${LINK_LABEL[k] || k}</a>`).join('<i>·</i>');
-  const tagsHTML = tps.map(x => `<span class="tag t" style="--c:${topicColor(x)}">${esc(x)}</span>`).join('');
+  const tagsHTML = tps.map(x => `<button type="button" class="tag t fl" data-f="topic" data-v="${esc(x)}" style="--c:${topicColor(x)}">${esc(x)}</button>`).join('');
   const text = [t.title, authors.join(' '), t.venue, t.city, t.type, y, tps.join(' ')].filter(Boolean).join(' ').toLowerCase();
-  return `        <article class="paper hc" data-year="${y}" data-upcoming="${up ? 1 : 0}" data-type="${esc(t.type)}" data-topics="${esc(tps.join('|'))}" data-text="${esc(text)}">
+  return `        <article class="paper hc" data-year="${y}" data-upcoming="${up ? 1 : 0}" data-type="${esc(t.type)}" data-authors="${esc(authors.map(canon).join('|'))}" data-venue="${esc(t.venue)}" data-topics="${esc(tps.join('|'))}" data-text="${esc(text)}">
           <div class="cbadge fmt" style="--bcol:${PRES_COLOR[t.type]}" title="${esc(t.type)}">${esc(t.type)}</div>
-          <span class="yrm">${MON[+m - 1]} ${y}</span>
+          <span class="yrm">${MON[+m - 1]} ${flBtn('year', y, y)}</span>
           <h3>${esc(t.title)}</h3>
-          <p class="meta"><span class="au">${authors.map(a => isMe(a) ? `<b>${esc(a)}</b>` : esc(a)).join(', ')}</span><span class="vb"><span class="ven">${esc(t.venue)}</span>${t.city ? `<span class="loc">${esc(t.city)}</span>` : ''}</span></p>${quiet ? `\n          <p class="ql">${quiet}</p>` : ''}${tagsHTML ? `\n          <div class="pl">${tagsHTML}</div>` : ''}
+          <p class="meta"><span class="au">${authList(authors)}</span><span class="vb"><span class="ven">${flBtn('venue', t.venue, t.venue)}</span>${t.city ? `<span class="loc">${esc(t.city)}</span>` : ''}</span></p>${quiet ? `\n          <p class="ql">${quiet}</p>` : ''}${tagsHTML ? `\n          <div class="pl">${tagsHTML}</div>` : ''}
         </article>`;
 }
 /* the stats count only what has already happened */
@@ -543,8 +547,8 @@ function presStats() {
 }
 const presentationsBody = `    <section>
       ${head('Presentations', LEDES.presentations, presStats())}
-      <div class="sbox"><input type="search" id="q" placeholder="search titles, venues, cities" aria-label="Search presentations" aria-keyshortcuts="/" autocomplete="off"><kbd aria-hidden="true">/</kbd></div>
-      <p class="shint">Press <kbd>/</kbd> to search, <kbd>Esc</kbd> to clear, and <kbd>?</kbd> for more keyboard shortcuts.</p>
+      <div class="sbox"><input type="search" id="q" placeholder="search titles, venues, cities" aria-label="Search presentations" aria-keyshortcuts="/" autocomplete="off"><kbd aria-hidden="true">/</kbd><button type="button" class="sclr" hidden>clear all</button></div>
+      <p class="shint">Press <kbd>/</kbd> to search, <kbd>Esc</kbd> to clear, and <kbd>?</kbd> for more keyboard shortcuts. Click an author, venue, year or topic on a card to filter by it.</p>
       <div class="filters">
 ${presTopics.length ? `        <div class="frow"><span class="flab">Topics</span>${chipRow('topic', presTopics.map(id => ({ id, color: topicColor(id) })))}</div>\n` : ''}        <div class="frow"><span class="flab">Format</span>${chipRow('type', PRES_TYPES.map(id => ({ id, color: PRES_COLOR[id] })))}</div>
         <div class="frow"><span class="flab">Year</span><div class="dd"><button type="button" class="ddb" id="yb" aria-haspopup="listbox" aria-expanded="false"><span>all</span><span aria-hidden="true">▾</span></button><ul class="ddl" id="yl" role="listbox" hidden><li><button type="button" role="option" data-year="" aria-selected="true">all</button></li>${nUpcoming ? '<li><button type="button" role="option" data-year="upcoming" aria-selected="false">upcoming</button></li>' : ''}${presYears.map(y => `<li><button type="button" role="option" data-year="${y}" aria-selected="false">${y}</button></li>`).join('')}</ul></div></div>
@@ -553,7 +557,7 @@ ${presTopics.length ? `        <div class="frow"><span class="flab">Topics</span
       <div id="tlist">
 ${presGroups}
       </div>
-      <p class="count" id="none" hidden>No presentations match.</p>
+      <p class="count" id="none" hidden>No presentations match. <button type="button" class="tag" id="nclr">clear all</button></p>
     </section>`;
 
 /* ---------- lately ---------- */
