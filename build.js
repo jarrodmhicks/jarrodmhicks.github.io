@@ -249,13 +249,13 @@ const keysDialog = `<dialog id="keys" aria-labelledby="keys-t">
   <h2 id="keys-t">Keyboard shortcuts</h2>
   <dl>
     <div><dt><kbd>1</kbd> to <kbd>${TABS.length}</kbd></dt><dd>jump to a page<div class="pgs">${TABS.map((t, i) => `<span class="pk" style="--c:${t.color}"><b>${i + 1}</b>${t.label}</span>`).join('')}</div></dd></div>
-    <div><dt><kbd>/</kbd></dt><dd>search papers (from any page; on Presentations it searches talks). Several words must all match. Then press <kbd>Enter</kbd> to select the top result</dd></div>
+    <div><dt><kbd>/</kbd></dt><dd>search papers and presentations. press <kbd>Enter</kbd> to select the top result</dd></div>
     <div><dt><kbd>Esc</kbd></dt><dd>clear the search, close a menu or this box</dd></div>
     <div><dt><kbd>?</kbd></dt><dd>open this box</dd></div>
   </dl>
   <h3>On Papers and Presentations</h3>
   <dl>
-    <div><dt><kbd>Enter</kbd></dt><dd>after searching: select the top result, so the keys below work right away</dd></div>
+    <div><dt><kbd>Enter</kbd></dt><dd>after searching: select the top result</dd></div>
     <div><dt>${K('n', 'd')}</dt><dd>next card</dd></div>
     <div><dt>${K('b', 'u')}</dt><dd>previous card</dd></div>
     <div><dt>${K('l', 'r')}</dt><dd>move along the card's links (DOI, PDF, slides, video). <kbd>Enter</kbd> opens the highlighted one</dd></div>
@@ -267,7 +267,7 @@ const keysDialog = `<dialog id="keys" aria-labelledby="keys-t">
     <div><dt>${K('u', 'd')}</dt><dd>choose a row</dd></div>
     <div><dt>${K('l', 'r')}</dt><dd>go back in time, or forward again, on the chosen row</dd></div>
   </dl>
-  <p class="kfoot">There is one more, but you will have to find it. Hint: it is a classic.</p>
+  <p class="kfoot">There is also a hidden code. Hint: it is a classic sequence.</p>
   <button type="button" class="btn" id="kclose">close</button>
 </dialog>`;
 function page({ id, title, desc, body, file }) {
