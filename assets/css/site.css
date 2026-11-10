@@ -70,7 +70,7 @@ p{max-width:66ch}
 @media(prefers-reduced-motion:reduce){.p-lan{animation:none}}
 /* the badge can be grabbed and swung (see the badge block in site.js) */
 .p-lan{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
-.p-lan.dr{animation:none;cursor:grabbing}
+.p-lan.dr{animation:none;cursor:grabbing;will-change:transform}
 .p-lan .piv{position:absolute;left:50%;top:0;width:0;height:0}
 .p-lan{position:relative}
 .p-badge{width:100%;border:3px solid var(--ink);border-radius:22px;background:var(--bg);padding:34px 14px 16px;position:relative;text-align:center}

@@ -507,7 +507,7 @@
     var th = 0, om = 0, raf = 0, last = 0, drag = null, samples = [];
     var show = function () { lan.style.transform = 'rotate(' + (th * 180 / Math.PI).toFixed(3) + 'deg)'; };
     var pivot = function () { var r = pv.getBoundingClientRect(); return { x: r.left, y: r.top }; };
-    var ang = function (e, p) { return Math.atan2(e.clientX - p.x, e.clientY - p.y); };
+    var ang = function (e, p) { return -Math.atan2(e.clientX - p.x, e.clientY - p.y); }; /* CSS rotates clockwise, so a pointer to the right of the pivot means a negative angle */
     var wrap = function (a) { while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a; };
     var step = function (t) {
       var dt = Math.min(0.033, (t - last) / 1000 || 0.016); last = t;
@@ -531,7 +531,7 @@
       if (!drag) return;
       if (Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y) > 4) drag.moved = true;
       if (!drag.moved) return;
-      th = Math.max(-3.05, Math.min(3.05, drag.th0 + wrap(ang(e, drag.p) - drag.a0))); show();
+      th = Math.max(-2.4, Math.min(2.4, drag.th0 + wrap(ang(e, drag.p) - drag.a0))); show();
       samples.push({ t: performance.now(), th: th }); if (samples.length > 8) samples.shift();
     });
     var up = function () {
@@ -541,6 +541,7 @@
         var n = performance.now(), s = samples.filter(function (q) { return n - q.t < 90; });
         om = s.length > 1 ? Math.max(-14, Math.min(14, (s[s.length - 1].th - s[0].th) / ((s[s.length - 1].t - s[0].t) / 1000))) : 0;
       }
+      if (drag.moved) om -= Math.sign(th) * Math.min(2.2, Math.abs(th) * 1.2); /* a small push toward hanging straight, so it starts falling the instant you let go */
       drag = null; go();
     };
     lan.addEventListener('pointerup', up); lan.addEventListener('pointercancel', up);
